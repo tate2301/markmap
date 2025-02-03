@@ -32,27 +32,54 @@ const plugin = definePlugin({
   transform(transformHooks: ITransformHooks) {
     let enableFeature = noop;
 
+    // Add direction property to node data during transformation
     transformHooks.parser.tap((md) => {
-      // Add custom token rule for direction markers
       md.core.ruler.before('inline', 'bidirectional', (state) => {
         for (let i = 0; i < state.tokens.length; i++) {
           const token = state.tokens[i];
           if (token.type === 'inline' && token.content) {
             // Look for direction markers [->] or [<-]
-            token.content = token.content.replace(
-              /\[([-><])\] /,
-              (_, direction) => {
-                const dir = direction === '<' ? 'left' : 'right';
-                return `<span data-direction="${dir}"></span>`;
-              }
-            );
+            const match = token.content.match(/^\[([-><])\] (.*)/);
+            if (match) {
+              const direction = match[1] === '<' ? 'left' : 'right';
+              // Store direction in token metadata
+              token.meta = token.meta || {};
+              token.meta.direction = direction;
+              // Remove the direction marker from content
+              token.content = match[2];
+            }
           }
         }
         return false;
       });
     });
 
-    transformHooks.beforeParse.tap((_, context) => {
+    // Process direction during tree building
+    transformHooks.afterParse.tap((_, context) => {
+      const processNode = (node: any, parentDirection?: string) => {
+        // Check if node has explicit direction from markdown
+        const nodeDirection = node.meta?.direction;
+        
+        // Set direction based on explicit marking or inherit from parent
+        node.direction = nodeDirection || parentDirection || 'right';
+        
+        // Add direction data attribute
+        node.d = node.d || {};
+        node.d['data-direction'] = node.direction;
+        
+        // Process children recursively
+        if (Array.isArray(node.children)) {
+          node.children.forEach((child: any) => {
+            processNode(child, node.direction);
+          });
+        }
+      };
+
+      if (context.root) {
+        // Process the entire tree starting from root
+        processNode(context.root);
+      }
+
       enableFeature = () => {
         context.features[name] = true;
       };
