@@ -1,5 +1,5 @@
 {
-  "name": "markmap-html-parser",
+  "name": "mdmindmap-html-parser",
   "version": "0.18.9",
   "description": "Parse HTML into markmap data structure",
   "author": "Gerald <gera2ld@live.com>",
@@ -13,7 +13,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",

@@ -1,5 +1,5 @@
 {
-  "name": "markmap-cli",
+  "name": "mdmindmap-cli",
   "version": "0.18.9",
   "description": "Create markmaps from CLI",
   "author": "Gerald <gera2ld@live.com>",
@@ -18,7 +18,7 @@
   "homepage": "https://github.com/markmap/markmap/packages/markmap-cli#readme",
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",

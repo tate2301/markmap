@@ -1,5 +1,5 @@
 {
-  "name": "markmap",
+  "name": "mdmindmap",
   "private": true,
   "engines": {
     "node": ">=22"
@@ -47,5 +47,8 @@
     "*.css": [
       "prettier --write"
     ]
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }

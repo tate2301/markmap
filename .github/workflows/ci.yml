@@ -15,3 +15,7 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm build
+      - name: Publish to GitHub Packages
+        run: pnpm publish --access public --registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

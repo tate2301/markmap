@@ -1,5 +1,5 @@
 {
-  "name": "markmap-render",
+  "name": "mdmindmap-render",
   "version": "0.18.9",
   "description": "Visualize your Markdown as mindmaps with Markmap",
   "author": "Gerald <gera2ld@live.com>",
@@ -13,7 +13,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "sideEffects": false,
   "main": "dist/index.js",
