@@ -47,3 +47,11 @@ If no direction markers are specified, the mindmap will be balanced automaticall
 ```
 
 👉 [Read the documentation](https://markmap.js.org/docs) for more detail.
+
+## Running Tests
+
+To run the tests and check if they pass, use the following command:
+
+```sh
+pnpm test
+```
