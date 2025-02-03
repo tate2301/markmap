@@ -56,12 +56,18 @@ const plugin = definePlugin({
 
     // Process direction during tree building
     transformHooks.afterParse.tap((_, context) => {
-      const processNode = (node: any, parentDirection?: string) => {
+      const processNode = (node: any, parentDirection?: string, index?: number) => {
         // Check if node has explicit direction from markdown
         const nodeDirection = node.meta?.direction;
         
-        // Set direction based on explicit marking or inherit from parent
-        node.direction = nodeDirection || parentDirection || 'right';
+        // Set direction based on explicit marking or alternate if not specified
+        if (nodeDirection) {
+          node.direction = nodeDirection;
+        } else if (parentDirection) {
+          node.direction = parentDirection === 'right' ? 'left' : 'right';
+        } else {
+          node.direction = index % 2 === 0 ? 'right' : 'left';
+        }
         
         // Add direction data attribute
         node.d = node.d || {};
@@ -69,8 +75,8 @@ const plugin = definePlugin({
         
         // Process children recursively
         if (Array.isArray(node.children)) {
-          node.children.forEach((child: any) => {
-            processNode(child, node.direction);
+          node.children.forEach((child: any, idx: number) => {
+            processNode(child, node.direction, idx);
           });
         }
       };
