@@ -15,7 +15,7 @@ export {
   pluginKatex,
   pluginNpmUrl,
   pluginSourceLines,
-  pluginBidirectional
+  pluginBidirectional,
 };
 
 export const plugins = [
@@ -25,5 +25,5 @@ export const plugins = [
   pluginNpmUrl,
   pluginCheckbox,
   pluginSourceLines,
-  pluginBidirectional
+  pluginBidirectional,
 ];
