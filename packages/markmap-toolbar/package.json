@@ -1,5 +1,5 @@
 {
-  "name": "markmap-toolbar",
+  "name": "mdmindmap-toolbar",
   "version": "0.18.9",
   "description": "Extensible toolbar for markmap",
   "author": "Gerald <gera2ld@live.com>",
@@ -20,7 +20,7 @@
   ],
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "homepage": "https://github.com/markmap/markmap/packages/markmap-toolbar#readme",
   "repository": {

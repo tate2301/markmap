@@ -1,5 +1,5 @@
 {
-  "name": "markmap-common",
+  "name": "mdmindmap-common",
   "version": "0.18.9",
   "description": "",
   "author": "",
@@ -18,7 +18,7 @@
   ],
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "homepage": "https://github.com/markmap/markmap/packages/markmap-common#readme",
   "repository": {

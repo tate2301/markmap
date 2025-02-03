@@ -1,5 +1,5 @@
 {
-  "name": "markmap-view",
+  "name": "mdmindmap-view",
   "version": "0.18.9",
   "description": "View markmaps in browser",
   "author": "Gerald <gera2ld@live.com>",
@@ -12,7 +12,7 @@
   "homepage": "https://github.com/markmap/markmap/packages/markmap-view#readme",
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
