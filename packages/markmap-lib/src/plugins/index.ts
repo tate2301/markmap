@@ -4,6 +4,7 @@ import pluginHljs from './hljs';
 import pluginKatex from './katex';
 import pluginNpmUrl from './npm-url';
 import pluginSourceLines from './source-lines';
+import pluginBidirectional from './bidirectional';
 
 export * from './base';
 
@@ -14,6 +15,7 @@ export {
   pluginKatex,
   pluginNpmUrl,
   pluginSourceLines,
+  pluginBidirectional
 };
 
 export const plugins = [
@@ -23,4 +25,5 @@ export const plugins = [
   pluginNpmUrl,
   pluginCheckbox,
   pluginSourceLines,
+  pluginBidirectional
 ];
