@@ -20,7 +20,7 @@
     "access": "public",
     "registry": "https://npm.pkg.github.com"
   },
-  "homepage": "https://github.com/markmap/markmap/packages/markmap-common#readme",
+  "homepage": "https://github.com/markmap/markmap/packages/mdmindmap-common#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/markmap/markmap.git"

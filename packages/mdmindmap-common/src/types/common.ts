@@ -16,6 +16,10 @@ export interface IPureNode {
      * 2 - folded along with all its child nodes
      */
     fold?: number;
+    /**
+     * The lines of the node.
+     */
+    lines?: string;
   };
   children: IPureNode[];
 }

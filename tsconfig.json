@@ -1,13 +1,13 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/markmap-autoloader" },
-    { "path": "./packages/markmap-cli" },
-    { "path": "./packages/markmap-common" },
-    { "path": "./packages/markmap-html-parser" },
-    { "path": "./packages/markmap-lib" },
-    { "path": "./packages/markmap-render" },
-    { "path": "./packages/markmap-toolbar" },
-    { "path": "./packages/markmap-view" }
+    { "path": "./packages/mdmindmap-autoloader" },
+    { "path": "./packages/mdmindmap-cli" },
+    { "path": "./packages/mdmindmap-common" },
+    { "path": "./packages/mdmindmap-html-parser" },
+    { "path": "./packages/mdmindmap-lib" },
+    { "path": "./packages/mdmindmap-render" },
+    { "path": "./packages/mdmindmap-toolbar" },
+    { "path": "./packages/mdmindmap-view" }
   ]
 }
