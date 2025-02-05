@@ -1,55 +1,78 @@
 {
-  "name": "mdmindmap",
-  "private": true,
-  "engines": {
-    "node": ">=22"
+  "name": "mdmindmap-view",
+  "version": "0.18.9",
+  "description": "View markmaps in browser",
+  "author": "Gerald <gera2ld@live.com>",
+  "license": "MIT",
+  "keywords": [
+    "markmap",
+    "markdown",
+    "mindmap"
+  ],
+  "homepage": "https://github.com/markmap/markmap/packages/mdmindmap-view#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
   },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@unocss/postcss": "^0.65.3",
-    "autoprefixer": "^10.4.20",
-    "del-cli": "^6.0.0",
-    "eslint": "^9.17.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^15.14.0",
-    "husky": "^9.1.7",
-    "jsdom": "^26.0.0",
-    "lerna": "^8.1.9",
-    "lint-staged": "^15.3.0",
-    "postcss": "^8.4.49",
-    "postcss-calc": "^10.0.2",
-    "postcss-nested": "^7.0.2",
-    "prettier": "^3.4.2",
-    "read-package-up": "^11.0.0",
-    "typedoc": "^0.27.5",
-    "typescript": "^5.7.2",
-    "typescript-eslint": "^8.18.2",
-    "unocss": "^0.65.3",
-    "vite": "latest",
-    "vitest": "latest"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markmap/markmap.git"
   },
   "scripts": {
-    "prepare": "husky || true",
-    "build": "pnpm lint && pnpm clean && pnpm build:types && pnpm build:js && pnpm test",
-    "lint": "eslint && prettier --check packages/*/src",
-    "lint:fix": "eslint --fix && prettier --write packages/*/src",
-    "test": "vitest --run",
-    "clean": "pnpm -r clean",
-    "build:types": "pnpm -r build:types",
-    "build:js": "pnpm -r build:js",
-    "build:docs": "typedoc --out api --titleLink / --name markmap"
+    "clean": "del-cli dist tsconfig.tsbuildinfo",
+    "build:types": "tsc",
+    "build:js": "vite build && TARGET=es vite build",
+    "build": "pnpm clean && pnpm /^build:/",
+    "prepublishOnly": "pnpm build",
+    "dev": "vite",
+    "playground": "vite serve --open playground.html"
   },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.css": [
-      "prettier --write"
-    ]
+  "bugs": {
+    "url": "https://github.com/markmap/markmap/issues"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "unpkg": "dist/browser/index.js",
+  "jsdelivr": "dist/browser/index.js",
+  "files": [
+    "dist"
+  ],
+  "typings": "dist/index.d.ts",
+  "dependencies": {
+    "@babel/runtime": "^7.22.6",
+    "@vitejs/plugin-react": "^4.3.4",
+    "d3": "^7.8.5",
+    "d3-selection": "^3.0.0",
+    "framer-motion": "^12.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@vscode/markdown-it-katex": "^1.1.0",
+    "highlight.js": "^11.8.0",
+    "katex": "^0.16.8",
+    "markdown-it": "^14.1.0",
+    "markdown-it-ins": "^4.0.0",
+    "markdown-it-mark": "^4.0.0",
+    "markdown-it-sub": "^2.0.0",
+    "markdown-it-sup": "^2.0.0",
+    "prismjs": "^1.29.0",
+    "yaml": "^2.5.1",
+    "cheerio": "1.0.0"
+
+    
+  },
+  "devDependencies": {
+    "@gera2ld/jsx-dom": "^2.2.2",
+    "@types/d3": "^7.4.0",
+    "@types/d3-hierarchy": "^3.1.6",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "d3-hierarchy": "^3.1.2",
+    "d3-selection-multi": "^1.0.1",
+    "@highlightjs/cdn-assets": "^11.8.0",
+    "@types/katex": "^0.16.7",
+    "@types/markdown-it": "^14.0.0",
+    "webfontloader": "^1.6.28",
+    "npm2url": "^0.2.4"
   }
 }

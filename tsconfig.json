@@ -1,13 +1,30 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./packages/mdmindmap-autoloader" },
-    { "path": "./packages/mdmindmap-cli" },
-    { "path": "./packages/mdmindmap-common" },
-    { "path": "./packages/mdmindmap-html-parser" },
-    { "path": "./packages/mdmindmap-lib" },
-    { "path": "./packages/mdmindmap-render" },
-    { "path": "./packages/mdmindmap-toolbar" },
-    { "path": "./packages/mdmindmap-view" }
-  ]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noImplicitAny": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "rootDir": "_src",
+    "outDir": "dist",
+    "jsxImportSource": "react",
+    "esModuleInterop": true,
+
+  },
+  "include": ["_src/**/*", "../../shim.d.ts"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
