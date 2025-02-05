@@ -1,0 +1,47 @@
+{
+  "name": "mdmindmap-autoloader",
+  "version": "0.18.9",
+  "description": "Load markmaps automatically in HTML",
+  "author": "Gerald <gera2ld@live.com>",
+  "license": "MIT",
+  "keywords": [
+    "markmap",
+    "markdown",
+    "mindmap"
+  ],
+  "homepage": "https://github.com/markmap/markmap/packages/mdmindmap-autoloader#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markmap/markmap.git"
+  },
+  "scripts": {
+    "clean": "del-cli dist tsconfig.tsbuildinfo",
+    "build:types": "tsc",
+    "build:js": "vite build",
+    "build": "pnpm clean && pnpm /^build:/",
+    "prepublishOnly": "pnpm build"
+  },
+  "bugs": {
+    "url": "https://github.com/markmap/markmap/issues"
+  },
+  "main": "dist/index.js",
+  "unpkg": "dist/index.js",
+  "jsdelivr": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "mdmindmap-common": "*"
+  },
+  "devDependencies": {
+    "d3": "^7.8.5",
+    "mdmindmap-common": "workspace:*",
+    "mdmindmap-lib": "workspace:*",
+    "mdmindmap-toolbar": "workspace:*",
+    "mdmindmap-view": "workspace:*"
+  }
+}

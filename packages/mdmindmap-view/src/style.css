@@ -1,0 +1,258 @@
+.markmap {
+  --markmap-max-width: none;
+  --markmap-a-color: #0097e6;
+  --markmap-a-hover-color: #00a8ff;
+  --markmap-code-bg: #f0f0f0;
+  --markmap-code-color: #555;
+  --markmap-highlight-bg: #ffeaa7;
+  --markmap-table-border: 1px solid currentColor;
+  --markmap-font: 300 16px/20px sans-serif;
+  --markmap-circle-open-bg: #fff;
+  --markmap-text-color: #333;
+  --markmap-highlight-node-bg: #ff02;
+
+  font: var(--markmap-font);
+  color: var(--markmap-text-color);
+
+  &-link {
+    fill: none;
+  }
+
+  &-node {
+    > circle {
+      cursor: pointer;
+    }
+  }
+
+  &-foreign {
+    display: inline-block;
+    dominant-baseline: central;
+    text-anchor: middle;
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: var(--markmap-a-color);
+      &:hover {
+        color: var(--markmap-a-hover-color);
+      }
+    }
+
+    code {
+      padding: 0.25em;
+      font-size: calc(1em - 2px);
+      color: var(--markmap-code-color);
+      background-color: var(--markmap-code-bg);
+      border-radius: 2px;
+    }
+
+    pre {
+      margin: 0;
+      > code {
+        display: block;
+      }
+    }
+
+    del {
+      text-decoration: line-through;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    strong {
+      font-weight: bold;
+    }
+
+    mark {
+      background: var(--markmap-highlight-bg);
+    }
+
+    table,
+    th,
+    td {
+      border-collapse: collapse;
+      border: var(--markmap-table-border);
+    }
+
+    img {
+      display: inline-block;
+    }
+
+    svg {
+      fill: currentColor;
+    }
+
+    > div {
+      width: var(--markmap-max-width);
+      text-align: left;
+      > div {
+        display: inline-block;
+      }
+    }
+  }
+
+  &-highlight rect {
+    fill: var(--markmap-highlight-node-bg);
+  }
+}
+
+.markmap-dark .markmap {
+  --markmap-code-bg: #1a1b26;
+  --markmap-code-color: #ddd;
+  --markmap-circle-open-bg: #444;
+  --markmap-text-color: #eee;
+}
+
+.markmap-node {
+  cursor: pointer;
+}
+
+.markmap-node-circle {
+  fill: #fff;
+  stroke-width: 1.5;
+}
+
+.markmap-node-text {
+  fill: #000;
+  font: 10px sans-serif;
+}
+
+.markmap-link {
+  fill: none;
+}
+
+.markmap-foreign {
+  overflow: visible;
+}
+
+.markmap-foreign > div {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: var(--markmap-max-width);
+}
+
+.markmap-foreign > div > div {
+  display: inline-block;
+}
+
+/* Direction-specific styles */
+.markmap-node[data-direction='RL'] {
+  text-align: right;
+}
+
+.markmap-node[data-direction='RL'] > g > circle {
+  transform: translateX(-100%);
+}
+
+.markmap-link[data-direction='RL'] path {
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+
+/* Vertical layout styles */
+.markmap-node[data-direction='TB'] > g > circle,
+.markmap-node[data-direction='BT'] > g > circle {
+  transform: translateY(-50%);
+}
+
+.markmap-node[data-direction='TB'] .markmap-foreign,
+.markmap-node[data-direction='BT'] .markmap-foreign {
+  text-align: center;
+}
+
+.markmap-link[data-direction='TB'] path,
+.markmap-link[data-direction='BT'] path {
+  transform-origin: center;
+}
+
+.markmap-link[data-direction='BT'] path {
+  transform: scaleY(-1);
+}
+
+/* Center layout styles */
+.markmap-node[data-direction='center'] {
+  text-align: center;
+}
+
+.markmap-node[data-direction='center'] > g > circle {
+  transform: translateX(-50%);
+}
+
+.markmap-link[data-direction='center'] path {
+  stroke-dasharray: none;
+}
+
+/* Center layout specific styles */
+.markmap[data-direction='center'] {
+  --markmap-max-width: none;
+}
+
+.markmap[data-direction='center']
+  .markmap-node[data-side='left']
+  .markmap-node-text {
+  text-anchor: end;
+  transform: translate(-8px, 0);
+}
+
+.markmap[data-direction='center']
+  .markmap-node[data-side='right']
+  .markmap-node-text {
+  text-anchor: start;
+  transform: translate(8px, 0);
+}
+
+.markmap[data-direction='center'] .markmap-link[data-side='left'] {
+  stroke: var(--markmap-link-color);
+  fill: none;
+}
+
+.markmap[data-direction='center'] .markmap-link[data-side='right'] {
+  stroke: var(--markmap-link-color);
+  fill: none;
+}
+
+.markmap[data-direction='center']
+  .markmap-node[data-side='left']
+  .markmap-node-circle {
+  transform: translate(-4px, 0);
+}
+
+.markmap[data-direction='center']
+  .markmap-node[data-side='right']
+  .markmap-node-circle {
+  transform: translate(4px, 0);
+}
+
+/* Hover effects for centered layout */
+.markmap[data-direction='center'] .markmap-node:hover .markmap-node-circle {
+  fill: var(--markmap-node-hover-color);
+}
+
+.markmap[data-direction='center'] .markmap-node:hover .markmap-node-text {
+  fill: var(--markmap-text-hover-color);
+}
+
+[data-layout-direction='TB'] .markmap-foreign,
+[data-layout-direction='BT'] .markmap-foreign {
+  white-space: nowrap;
+}
+
+.node {
+  cursor: pointer;
+}
+
+/* Make highlight styles more prominent */
+.node.highlight rect {
+  stroke: #4caf50 !important; /* Use !important to ensure it overrides other styles */
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px rgba(76, 175, 80, 0.6));
+}
+
+.node:hover rect {
+  stroke: #2196f3;
+  stroke-width: 2px;
+}

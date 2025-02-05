@@ -1,0 +1,65 @@
+{
+  "name": "mdmindmap-view",
+  "version": "0.18.9",
+  "description": "View markmaps in browser",
+  "author": "Gerald <gera2ld@live.com>",
+  "license": "MIT",
+  "keywords": [
+    "markmap",
+    "markdown",
+    "mindmap"
+  ],
+  "homepage": "https://github.com/markmap/markmap/packages/mdmindmap-view#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markmap/markmap.git"
+  },
+  "scripts": {
+    "clean": "del-cli dist tsconfig.tsbuildinfo",
+    "build:types": "tsc",
+    "build:js": "vite build && TARGET=es vite build",
+    "build": "pnpm clean && pnpm /^build:/",
+    "prepublishOnly": "pnpm build",
+    "dev": "vite",
+    "playground": "vite serve --open playground.html"
+  },
+  "bugs": {
+    "url": "https://github.com/markmap/markmap/issues"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "unpkg": "dist/browser/index.js",
+  "jsdelivr": "dist/browser/index.js",
+  "files": [
+    "dist"
+  ],
+  "typings": "dist/index.d.ts",
+  "dependencies": {
+    "@babel/runtime": "^7.22.6",
+    "@vitejs/plugin-react": "^4.3.4",
+    "d3": "^7.8.5",
+    "d3-selection": "^3.0.0",
+    "framer-motion": "^12.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@gera2ld/jsx-dom": "^2.2.2",
+    "@types/d3": "^7.4.0",
+    "@types/d3-hierarchy": "^3.1.6",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "d3-hierarchy": "^3.1.2",
+    "d3-selection-multi": "^1.0.1",
+    "mdmindmap-common": "workspace:*",
+    "mdmindmap-lib": "workspace:*"
+  },
+  "peerDependencies": {
+    "mdmindmap-common": "*"
+  }
+}

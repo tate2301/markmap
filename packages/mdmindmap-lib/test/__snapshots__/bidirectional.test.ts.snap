@@ -1,0 +1,107 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bidirectional mindmap generation with explicit direction markers 1`] = `
+{
+  "children": [
+    {
+      "children": [],
+      "content": "[-&gt;] Child 1",
+      "payload": {
+        "lines": "1,2",
+        "tag": "li",
+      },
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "content": "[-&gt;] Grandchild 1",
+          "payload": {
+            "lines": "3,4",
+            "tag": "li",
+          },
+        },
+        {
+          "children": [],
+          "content": "[&lt;-] Grandchild 2",
+          "payload": {
+            "lines": "4,5",
+            "tag": "li",
+          },
+        },
+      ],
+      "content": "[&lt;-] Child 2",
+      "payload": {
+        "lines": "2,5",
+        "tag": "li",
+      },
+    },
+    {
+      "children": [],
+      "content": "[-&gt;] Child 3",
+      "payload": {
+        "lines": "5,6",
+        "tag": "li",
+      },
+    },
+  ],
+  "content": "Root",
+  "payload": {
+    "lines": "0,6",
+    "tag": "li",
+  },
+}
+`;
+
+exports[`bidirectional mindmap generation without explicit direction markers 1`] = `
+{
+  "children": [
+    {
+      "children": [],
+      "content": "Child 1",
+      "payload": {
+        "lines": "1,2",
+        "tag": "li",
+      },
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "content": "Grandchild 1",
+          "payload": {
+            "lines": "3,4",
+            "tag": "li",
+          },
+        },
+        {
+          "children": [],
+          "content": "Grandchild 2",
+          "payload": {
+            "lines": "4,5",
+            "tag": "li",
+          },
+        },
+      ],
+      "content": "Child 2",
+      "payload": {
+        "lines": "2,5",
+        "tag": "li",
+      },
+    },
+    {
+      "children": [],
+      "content": "Child 3",
+      "payload": {
+        "lines": "5,6",
+        "tag": "li",
+      },
+    },
+  ],
+  "content": "Root",
+  "payload": {
+    "lines": "0,6",
+    "tag": "li",
+  },
+}
+`;
