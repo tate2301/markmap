@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { INode } from '../lib/view/types';
 import { cn } from '../utils';
 import {motion} from 'framer-motion'
@@ -11,14 +11,29 @@ interface NodeProps {
 }
 
 const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
+  const [isEditing, setIsEditing] = useState(false);
   const handleClick = (event: React.MouseEvent) => {
     onClick?.(node, event);
   };
 
+  const onEdit = () => {
+    setIsEditing(true);
+  };
 
   const getStrokeWidth = () => {
     return 1;
   };
+
+  // add esc key listener
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsEditing(false);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
 
   return (
     <g className={cn('node', { 'selected': isSelected })} onClick={handleClick}>
@@ -36,6 +51,7 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
         <motion.div
           layout="position"
           layoutId={`node-${node.state.key}`}
+          onDoubleClick={onEdit}
           style={{
             width: '100%',
             height: '100%',
