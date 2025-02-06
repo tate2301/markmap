@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { INode } from '../lib/view/types';
+import React, { memo, useEffect, useState } from 'react';
+import { Direction, INode } from '../lib/view/types';
 import { cn } from '../utils';
 import {motion} from 'framer-motion'
 
@@ -52,9 +52,26 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
           layout="position"
           layoutId={`node-${node.state.key}`}
           onDoubleClick={onEdit}
+          initial={{
+            width: 0,
+            opacity: 0,
+            x: node.direction === Direction.RL ? -40 : 40
+          }}
+          animate={{
+            width: nodeSize[0],
+            opacity: 1,
+            x: 0,
+            originX: !node.direction ? nodeSize[0]/2 : node.direction === Direction.RL ? nodeSize[0]  : 1,
+            transition: {
+              ease: "easeIn",
+            }
+          }}
+          exit={{
+            height: 0,
+            opacity: 0
+          }}
           style={{
             width: '100%',
-            height: '100%',
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
@@ -77,4 +94,4 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
   );
 };
 
-export default Node;
+export default memo(Node);

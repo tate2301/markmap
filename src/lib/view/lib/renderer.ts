@@ -100,9 +100,61 @@ export class SimpleTreeRenderer {
     return newNode;
   }
 
+  updateNode = (node: INode) => {
+    const transform = `translate(${node.state.rect.x},${node.state.rect.y})`;
+    const element = this.findElement(node)
+    // element?.remove()
+
+    const newElement  = this.renderElement(node, transform)
+    // element?.replaceWith(newElement)
+    
+    // we want to replace the element with the new element
+    // but we want to keep the same root
+    let root = this.nodeRoots.get(node.state.key);
+    if (root) {
+      root.render(newElement)
+    }
+
+    const _newElement = this.findElement(node)
+
+    type DNode = {
+      data: INode & {parent: INode},
+    }
+    const childElements = this.g
+    .selectAll('g.node-wrapper')
+    .filter((d) => {
+      
+      console.log({
+        parent: (d as DNode).data.parent, node, d
+      })
+      return (d as DNode).data.parent === node; // This checks if the node's parent is our target node
+    });
+
+
+    console.log({ _newElement, childElements})
+
+  }
+
+  
+
+  private renderElement = (node: INode, transform: string) => {
+    const options = this.stateManager.getOptions()
+    return createElement(NodeWrapper, {
+      key: node.state.key,
+      node: node,
+      nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
+      onClick: this.nodeHandler.handleNodeClick,
+      isSelected: node === this.stateManager.getSelectedNode(),
+      transform: transform,
+    })
+    
+  }
+
+ 
   render(): void {
     const data = this.stateManager.getData();
     if (!data) return;
+
 
     // Clear the roots map when doing a full re-render
     this.nodeRoots.clear();
@@ -177,14 +229,7 @@ export class SimpleTreeRenderer {
         createElement(
           StrictMode,
           null,
-          createElement(NodeWrapper, {
-            key: d.data.state.key,
-            node: d.data,
-            nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
-            onClick: this.nodeHandler.handleNodeClick,
-            isSelected: d.data === this.stateManager.getSelectedNode(),
-            transform: transform,
-          }),
+          this.renderElement(d.data, transform)
         ),
       );
     });
@@ -417,7 +462,7 @@ export class SimpleTreeRenderer {
       newNode.payload.fold = newNode.payload.fold ? 0 : 1;
     }
 
-    this.render(); // Add this to ensure the view updates
+    // this.render(); // Add this to ensure the view updates
   }
 
   private toggleRecursive(node: INode): void {
