@@ -41,13 +41,15 @@
   "typings": "dist/index.d.ts",
   "dependencies": {
     "@babel/runtime": "^7.22.6",
+    "@tailwindcss/postcss": "^4.0.3",
+    "@tailwindcss/vite": "^4.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vscode/markdown-it-katex": "^1.1.0",
+    "cheerio": "1.0.0",
+    "clsx": "^2.1.1",
     "d3": "^7.8.5",
     "d3-selection": "^3.0.0",
     "framer-motion": "^12.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@vscode/markdown-it-katex": "^1.1.0",
     "highlight.js": "^11.8.0",
     "katex": "^0.16.8",
     "markdown-it": "^14.1.0",
@@ -56,23 +58,30 @@
     "markdown-it-sub": "^2.0.0",
     "markdown-it-sup": "^2.0.0",
     "prismjs": "^1.29.0",
-    "yaml": "^2.5.1",
-    "cheerio": "1.0.0"
-
-    
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.1",
+    "yaml": "^2.5.1"
   },
   "devDependencies": {
     "@gera2ld/jsx-dom": "^2.2.2",
+    "@highlightjs/cdn-assets": "^11.8.0",
     "@types/d3": "^7.4.0",
     "@types/d3-hierarchy": "^3.1.6",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
-    "d3-hierarchy": "^3.1.2",
-    "d3-selection-multi": "^1.0.1",
-    "@highlightjs/cdn-assets": "^11.8.0",
     "@types/katex": "^0.16.7",
     "@types/markdown-it": "^14.0.0",
-    "webfontloader": "^1.6.28",
-    "npm2url": "^0.2.4"
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@unocss/postcss": "^65.4.3",
+    "autoprefixer": "^10.4.20",
+    "d3-hierarchy": "^3.1.2",
+    "d3-selection-multi": "^1.0.1",
+    "npm2url": "^0.2.4",
+    "postcss": "^8.5.1",
+    "postcss-calc": "^10.1.1",
+    "postcss-nested": "^7.0.2",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.1.0",
+    "webfontloader": "^1.6.28"
   }
 }

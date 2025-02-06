@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.node-wrapper:has(.selected) {
+  border: 2px solid #000;
+  outline: none;
+}

@@ -36,8 +36,8 @@ export const defaultOptions: Required<IMarkmapOptions> = {
   style: '',
   zoom: true,
   lineWidth: () => 2,
-  nodeSize: [100, 30],
+  nodeSize: [280, 40],
   nodePadding: 10,
-  levelSpacing: 120,
-  siblingSpacing: 40,
+  levelSpacing: 120 * 3,
+  siblingSpacing: 60,
 };

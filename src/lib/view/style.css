@@ -244,15 +244,3 @@
 .node {
   cursor: pointer;
 }
-
-/* Make highlight styles more prominent */
-.node.highlight rect {
-  stroke: #4caf50 !important; /* Use !important to ensure it overrides other styles */
-  stroke-width: 3px !important;
-  filter: drop-shadow(0 0 4px rgba(76, 175, 80, 0.6));
-}
-
-.node:hover rect {
-  stroke: #2196f3;
-  stroke-width: 2px;
-}

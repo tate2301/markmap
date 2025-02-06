@@ -3,7 +3,9 @@ import { SimpleTree, SimpleTreeOptions } from '../lib/view/simple-tree';
 import { Direction, INode } from '../lib/view/types';
 import { Controls } from './Controls';
 import { DevToolbar } from './DevToolbar';
-import { MarkmapFactory } from '../lib/view/markmap-simple-tree';
+import { MarkmapFactory } from '../lib/view/factory';
+import './globals.css';
+import dottedBg from '../assets/dotted-bg.svg?raw';
 
 export interface MindmapConfig {
   initialDirection?: Direction;
@@ -110,6 +112,7 @@ export const Mindmap = ({
 
   useEffect(() => {
     setCurrentData(data);
+    treeRef.current?.render(data);
   }, [data]);
 
   useEffect(() => {
@@ -211,6 +214,10 @@ export const Mindmap = ({
         height: '100%',
         position: 'relative',
         background: mergedConfig.backgroundColor,
+        backgroundImage: `url(data:image/svg+xml,${encodeURIComponent(dottedBg)})`,
+        backgroundRepeat: 'repeat',
+        backgroundPosition: 'center',
+        backgroundSize: '180px',
         paddingTop: '48px',
         ...style,
       }}

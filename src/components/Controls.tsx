@@ -25,6 +25,9 @@ export const Controls = ({
         padding: '10px',
         borderRadius: '5px',
         boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+        position: "fixed",
+        top: "100px",
+        left: "20px",
         ...style,
       }}
     >

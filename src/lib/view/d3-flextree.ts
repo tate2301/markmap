@@ -18,9 +18,9 @@ class FlexTreeLayout implements IFlexTreeLayout {
       nodeSize: (node) => node.data.state.size,
       spacing: 0,
       direction: Direction.LR,
-      minSpacing: 5,
-      levelSpacing: 20,
-      siblingSpacing: 10,
+      minSpacing: 20,
+      levelSpacing: 40,
+      siblingSpacing: 32,
       ...options,
     };
     this.layoutStrategy = getLayoutStrategy(

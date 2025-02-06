@@ -32,34 +32,10 @@ const transformer = new Transformer([
   },
 ]);
 
-const markdown = `
-- Root
-  - Child 1
-  - Child 2
-    - Subchild 1
-    - Subchild 2
-  - Child 3
-    - Subchild 3
-    - Subchild 4
-    - Subchild 5
-
-  - Child 4
-    - Subchild 6
-    - Subchild 7
-    - Subchild 8
-    - Subchild 9
-  - Child 5
-    - Subchild 10
-    - Subchild 11
-    - Subchild 12
-    - Subchild 13
-    - Subchild 14
-    - Subchild 15
-`;
 
 const MindmapPlayground: React.FC<PlaygroundOptions> = ({ controls }) => {
   const [currentData, setCurrentData] = useState<INode>(() => {
-    const data = transformer.transform(markdown);
+    const data = getSimpleSampleData();
     initializePayload(data);
     return data;
   });
@@ -87,15 +63,13 @@ const MindmapPlayground: React.FC<PlaygroundOptions> = ({ controls }) => {
         <div
           style={{
             position: 'fixed',
-            top: '80px',
+            top: '100px',
             right: '20px',
-            background: 'white',
-            padding: '10px',
-            borderRadius: '5px',
             boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
           }}
+          className='p-4 shadow-lg bg-white border-b border-zinc-400/5 flex justify-between rounded-xl'
         >
-          <label>
+          <label className='text-sm text-zinc-600'>
             Data Type:
             <select
               onChange={(e) => handleDataTypeChange(e.target.value)}

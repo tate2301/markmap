@@ -52,16 +52,7 @@ export class SimpleTreeRenderer {
   }
 
   private getStyleContent(): string {
-    const dynamicStyles = `
-        .enhanced-tree .node.selected rect {
-          stroke: #2ecc71 !important;
-        }
-        .enhanced-tree .node.highlight rect {
-          stroke: #3498db !important;
-        }
-      `;
-
-    return [treeStyles, dynamicStyles].filter(Boolean).join('\n');
+    return [treeStyles].filter(Boolean).join('\n');
   }
 
   private updateStyle(): void {
@@ -273,7 +264,7 @@ export class SimpleTreeRenderer {
     this.svg.transition().duration(300).call(this.zoom.scaleBy, factor);
   }
 
-  fitView(): void {
+  public fitView(): void {
     const bounds = this.g.node()?.getBBox();
     if (!bounds) return;
 
@@ -281,16 +272,16 @@ export class SimpleTreeRenderer {
     const height = this.svg.node()?.clientHeight || 600;
 
     const scale = Math.min(width / bounds.width, height / bounds.height) * 0.9; // 90% fit
-    const translateX = width / 2 - scale * (bounds.x + bounds.width / 2);
-    const translateY = height / 2 - scale * (bounds.y + bounds.height / 2);
+    const centerX = width / 2 - (bounds.x + bounds.width / 2) * scale;
+    const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
 
     this.svg
-      .transition()
-      .duration(750)
-      .call(
-        this.zoom.transform,
-        d3.zoomIdentity.translate(translateX, translateY).scale(scale),
-      );
+        .transition()
+        .duration(750)
+        .call(
+            this.zoom.transform,
+            d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+        );
   }
 
   resetView(): void {
@@ -327,16 +318,25 @@ export class SimpleTreeRenderer {
     const nodeElement = this.findElement(node);
     if (!nodeElement) return;
 
-    const options = this.stateManager.getOptions();
     const bounds = nodeElement.getBBox();
-    const transform = d3.zoomIdentity.translate(
-      (options.width ?? defaultOptions.width) / 2 -
-        (bounds.x + bounds.width / 2),
-      (options.height ?? defaultOptions.height) / 2 -
-        (bounds.y + bounds.height / 2),
-    );
+    const width = this.svg.node()?.clientWidth || 800;
+    const height = this.svg.node()?.clientHeight || 600;
+    
+    // Get current transform to maintain the current scale
+    const currentTransform = this.svg.property('__zoom') || d3.zoomIdentity;
+    const scale = currentTransform.k;
 
-    this.svg.transition().duration(300).call(this.zoom.transform, transform);
+    // Calculate center position
+    const centerX = width / 2 - (bounds.x + bounds.width / 2) * scale;
+    const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
+
+    this.svg
+        .transition()
+        .duration(300)
+        .call(
+            this.zoom.transform,
+            d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+        );
   }
 
   public ensureVisible(node: INode): void {
@@ -344,32 +344,42 @@ export class SimpleTreeRenderer {
     if (!nodeElement) return;
 
     const bounds = nodeElement.getBBox();
-    const options = this.stateManager.getOptions();
-    const width = options.width ?? defaultOptions.width;
-    const height = options.height ?? defaultOptions.height;
+    const width = this.svg.node()?.clientWidth || 800;
+    const height = this.svg.node()?.clientHeight || 600;
 
     const currentTransform = this.svg.property('__zoom') || d3.zoomIdentity;
     const viewportBounds = {
-      x: -currentTransform.x / currentTransform.k,
-      y: -currentTransform.y / currentTransform.k,
-      width: width / currentTransform.k,
-      height: height / currentTransform.k,
+        x: -currentTransform.x / currentTransform.k,
+        y: -currentTransform.y / currentTransform.k,
+        width: width / currentTransform.k,
+        height: height / currentTransform.k,
     };
 
-    // Check if node is outside viewport
+    // If node is not visible, center it
     if (!this.isRectVisible(bounds, viewportBounds)) {
-      this.centerNode(node);
+        // Calculate center position while maintaining current scale
+        const scale = currentTransform.k;
+        const centerX = width / 2 - (bounds.x + bounds.width / 2) * scale;
+        const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
+
+        this.svg
+            .transition()
+            .duration(300)
+            .call(
+                this.zoom.transform,
+                d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+            );
     }
   }
 
   public findElement(node: INode): SVGGElement | null {
-    const nodeElements = this.g.selectAll('g.node');
+    const nodeElements = this.g.selectAll('g.node-wrapper');
     let matchingElement: SVGGElement | null = null;
 
-    nodeElements.each(function (d: any) {
-      if (d.data === node) {
-        matchingElement = this as SVGGElement;
-      }
+    nodeElements.each(function(d: any) {
+        if (d?.data === node) {
+            matchingElement = this as SVGGElement;
+        }
     });
 
     return matchingElement;
@@ -379,11 +389,13 @@ export class SimpleTreeRenderer {
     rect: { x: number; y: number; width: number; height: number },
     viewport: { x: number; y: number; width: number; height: number },
   ): boolean {
+    // Add some padding to ensure the node isn't right at the edge
+    const padding = 20;
     return !(
-      rect.x + rect.width < viewport.x ||
-      rect.x > viewport.x + viewport.width ||
-      rect.y + rect.height < viewport.y ||
-      rect.y > viewport.y + viewport.height
+        rect.x + rect.width + padding < viewport.x ||
+        rect.x - padding > viewport.x + viewport.width ||
+        rect.y + rect.height + padding < viewport.y ||
+        rect.y - padding > viewport.y + viewport.height
     );
   }
 

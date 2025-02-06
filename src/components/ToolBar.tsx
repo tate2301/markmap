@@ -5,6 +5,7 @@ interface ToolBarProps {
   onZoomOut: () => void;
   onReset: () => void;
   onFit: () => void;
+  onCenter: () => void;
 }
 
 export const ToolBar: React.FC<ToolBarProps> = ({
@@ -12,6 +13,7 @@ export const ToolBar: React.FC<ToolBarProps> = ({
   onZoomOut,
   onReset,
   onFit,
+  onCenter,
 }) => {
   const buttonStyle = {
     padding: '5px 10px',
@@ -31,29 +33,27 @@ export const ToolBar: React.FC<ToolBarProps> = ({
     bottom: '20px',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: 'white',
-    padding: '10px',
-    borderRadius: '5px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-    display: 'flex',
+    boxShadow: '0 2px 4px -4px rgba(0,0,0,0.7), 0 4px 5px -3px rgba(0,0,0,0.14), 0 4px 10px 0 rgba(0,0,0,0.12)',
     gap: '10px',
     zIndex: 1000,
   } as const;
 
   return (
-    <div style={toolbarStyle}>
-      This is crazy
-      <button style={buttonStyle} onClick={onZoomIn} title="Zoom In">
-        +
+    <div style={toolbarStyle} className='flex gap-2 rounded-2xl p-2 border border-zinc-400/10 bg-white'>
+      <button className='rounded-lg px-4 py-2 bg-zinc-400/20 text-zinc-900' onClick={onZoomIn} title="Zoom In">
+        Zoom In
       </button>
-      <button style={buttonStyle} onClick={onZoomOut} title="Zoom Out">
-        −
+      <button className='rounded-lg px-4 py-2 bg-zinc-400/20 text-zinc-900' onClick={onZoomOut} title="Zoom Out">
+        Zoom Out
       </button>
-      <button style={buttonStyle} onClick={onReset} title="Reset View">
-        ⟲
+      <button className='rounded-lg px-4 py-2 bg-zinc-400/20 text-zinc-900' onClick={onReset} title="Reset View">
+        Reset View
       </button>
-      <button style={buttonStyle} onClick={onFit} title="Fit to View">
-        ↔
+      <button className='rounded-lg px-4 py-2 bg-zinc-400/20 text-zinc-900' onClick={onFit} title="Fit to View">
+        Fit to View
+      </button>
+      <button className='rounded-lg px-4 py-2 bg-zinc-400/20 text-zinc-900' onClick={onCenter} title="Center View">
+        Center View
       </button>
     </div>
   );

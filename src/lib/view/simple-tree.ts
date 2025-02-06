@@ -14,24 +14,13 @@ export type { SimpleTreeOptions } from './types';
 
 const treeStyles = `
   .node rect {
-    fill: white;
-    stroke: #999;
+    fill: none;
     stroke-width: 1px;
-  }
-
-  .node.selected rect {
-    stroke: #2ecc71;
-    stroke-width: 2px;
-  }
-
-  .node.highlight rect {
-    stroke: #3498db;
-    stroke-width: 2px;
   }
 
   .link {
     fill: none;
-    stroke: #999;
+    stroke: #ddd;
     stroke-width: 1.5px;
   }
 `;
@@ -141,6 +130,7 @@ export class SimpleTree {
         onZoomOut: () => this.zoomBy(0.8),
         onReset: () => this.resetView(),
         onFit: () => this.fitView(),
+        onCenter: () => this.centerNode(this.stateManager.getSelectedNode()),
       }),
     );
   }
@@ -158,7 +148,8 @@ export class SimpleTree {
     this.renderer.fitView();
   }
 
-  public centerNode(node: INode): void {
+  public centerNode(node: INode | null): void {
+    if (!node) return;
     this.renderer.centerNode(node);
   }
 
