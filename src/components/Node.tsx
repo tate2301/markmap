@@ -1,6 +1,7 @@
 import React from 'react';
 import { INode } from '../lib/view/types';
 import { cn } from '../utils';
+import {motion} from 'framer-motion'
 
 interface NodeProps {
   node: INode;
@@ -32,7 +33,9 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
         className='overflow-visible'
       />
       <foreignObject x={0} y={0} width={nodeSize[0]} height={nodeSize[1]} className='overflow-visible'>
-        <div
+        <motion.div
+          layout="position"
+          layoutId={`node-${node.state.key}`}
           style={{
             width: '100%',
             height: '100%',
@@ -52,7 +55,7 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
           })}
         >
           {node.content}
-        </div>
+        </motion.div>
       </foreignObject>
     </g>
   );

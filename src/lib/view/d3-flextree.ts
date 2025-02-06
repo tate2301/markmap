@@ -61,7 +61,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
 
       const result = this.layoutStrategy.transformCoordinates(
         d.x,
-        d.y,
+        d.y ,
         size,
         d as FlexTreeNode,
       );
