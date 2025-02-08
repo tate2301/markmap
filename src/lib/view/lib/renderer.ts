@@ -28,7 +28,7 @@ export class SimpleTreeRenderer {
   private linkPositions: Map<string, { source: { x: number; y: number }, target: { x: number; y: number } }> = new Map();
   private layoutTimeout: ReturnType<typeof setTimeout> | null = null;
 
-
+ 
   constructor(
     g: d3.Selection<any, any, any, any>,
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -130,13 +130,6 @@ export class SimpleTreeRenderer {
     }
 
     const hasSizeChanged = prevNodeSize.width !== width || prevNodeSize.height !== height
-    console.log({
-      where: "renderer",
-      height,
-      hasSizeChanged,
-      prevHeight: prevNodeSize.height,
-      newHeight: height
-    });
 
     // Update size immediately if changed
     if (hasSizeChanged) {
@@ -146,7 +139,6 @@ export class SimpleTreeRenderer {
       // Store the new size in our tracking Map
       this.nodeSizes.set(node.state.key, { width, height });
      
-      console.log("Rerendering the layout with values", {height, width})
       
       // Clear any pending layout timeout
       if (this.layoutTimeout) {
@@ -177,6 +169,13 @@ export class SimpleTreeRenderer {
     return (movedSourceX || movedSourceY || movedTargetX || movedTargetY);
   }
 
+  private computeNodeRectWithSize(node: INode)  {
+    const size = this.nodeSizes.get(node.state.key) ?? { width: 0, height: 0 };
+    
+    return MindMapUtils.computeRectWithSize(node.state.rect, [size.width, size.height]);
+
+  }
+
   render(): void {
     const data = this.stateManager.getData();
     if (!data) return;
@@ -198,17 +197,10 @@ export class SimpleTreeRenderer {
       nodeSize: (node: FlexTreeNode) => {
         // Use the node's stored size if available, otherwise fall back to default
 
-        const storedSize = this.nodePositions.get(node.data.state.key)
-        if(storedSize) {
-          node.data.state.size = [storedSize.width, storedSize.height]
-        }
+        const storedSize = this.nodeSizes.get(node.data.state.key)
+        const size: [number, number] = storedSize ? [storedSize.width, storedSize.height] : options.nodeSize ?? defaultOptions.nodeSize;
 
-        console.log({size: node.data.state.size, stored: this.nodeSizes.get(node.data.state.key)})
-
-
-        return node.data.state.size && node.data.state.size[0] > 0 && node.data.state.size[1] > 0
-          ? node.data.state.size
-          : options.nodeSize ?? defaultOptions.nodeSize;
+        return size;
       },
     });
   
@@ -245,17 +237,22 @@ export class SimpleTreeRenderer {
       // Unique key for this link
       const container = elements[i];
       const linkKey = d.source.data.state.key + '-' + d.target.data.state.key;
+
+      const sourceRect = this.computeNodeRectWithSize(d.source.data);
+      const targetRect = this.computeNodeRectWithSize(d.target.data);
   
       // Check if either node has moved
       const sourceChanged = rectHasChanged(
         d.source.data.state.key,
-        d.source.data.state.rect
+        sourceRect
       );
       const targetChanged = rectHasChanged(
         d.target.data.state.key,
-        d.target.data.state.rect
+        targetRect
       );
       const animateFlag = sourceChanged || targetChanged;
+
+      console.log({sourceHeight: d.source.data.state.rect.height, targetHeight: d.target.data.state.rect.height})
   
       // Render the link with animateFlag
       const reactRoot = createRoot(container as HTMLElement);
@@ -266,22 +263,20 @@ export class SimpleTreeRenderer {
           createElement(Path, {
             // Pass the computed source/target positions
             source: {
-              x: d.source.data.state.rect.x,
-              y: d.source.data.state.rect.y,
-              rect: d.source.data.state.rect,
+              x: sourceRect.x,
+              y: sourceRect.y,
+              rect: sourceRect,
             },
             target: {
-              x: d.target.data.state.rect.x,
-              y: d.target.data.state.rect.y,
-              rect: d.target.data.state.rect,
+              x: targetRect.x,
+              y: targetRect.y,
+              rect: targetRect,
             },
             direction: options.direction ?? defaultOptions.direction,
             nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
             sourceDirection: d.source.data.direction,
             targetDirection: d.target.data.direction,
-            sourceDepth: d.source.depth,
-  
-            // Our new animation flag
+            sourceDepth: d.source.depth,  
             animateFlag: animateFlag,
           })
         )

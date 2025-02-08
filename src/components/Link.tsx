@@ -38,9 +38,9 @@ const Path = ({
     if (direction === Direction.CENTER) {
       // Root node (depth 0) connections
       if (sourceDepth === 0) {
-        const sourceX = source.x + nodeSize[0] / 2;
-        const sourceY = source.y + nodeSize[1] / 2;
-        const targetY = target.y + nodeSize[1] / 2;
+        const sourceX = source.x + source.rect.width;
+        const sourceY = source.y + source.rect.height / 2;
+        const targetY = target.y + target.rect.height / 2;
 
         // For left side nodes
         if (targetDirection === Direction.RL) {
@@ -71,13 +71,13 @@ const Path = ({
       }
       // Non-root connections
       else {
-        const sourceY = source.y + nodeSize[1] / 2;
-        const targetY = target.y + nodeSize[1] / 2;
+        const sourceY = source.y + source.rect.height / 2;
+        const targetY = target.y + target.rect.height / 2;
 
         // Left side connections
         if (targetDirection === Direction.RL) {
           const sourceX = source.x;
-          const targetX = target.x + nodeSize[0];
+          const targetX = target.x + target.rect.width;
           const dx = Math.abs(targetX - sourceX);
           const controlPointOffset = Math.min(dx * 0.5, 100);
 
@@ -90,7 +90,7 @@ const Path = ({
         }
         // Right side connections
         else {
-          const sourceX = source.x + nodeSize[0];
+          const sourceX = source.x + source.rect.width;
           const targetX = target.x;
           const dx = Math.abs(targetX - sourceX);
           const controlPointOffset = Math.min(dx * 0.5, 100);

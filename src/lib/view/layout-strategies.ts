@@ -107,22 +107,12 @@ class CenterLayoutStrategy implements ILayoutStrategy {
         width: size[0],
         height: size[1],
       };
-    } else if (node?.data.direction === Direction.RL) {
-      // Left side nodes
-      return {
-        x: -y,
-        y: node?.depth === 1 ? 0 : x - (node.parent?.x ?? 0),
-        width: size[0],
-        height: size[1],
-      };
     } else {
-      // Right side nodes (LR)
-      return {
-        x: y,
-        y: node?.depth === 1 ? 0 : x - (node?.parent?.x ?? 0),
-        width: size[0],
-        height: size[1],
-      };
+      return getLayoutStrategy(node?.data.direction ?? Direction.LR).transformCoordinates(
+        x,
+        y,
+        size,
+      );
     }
   }
 

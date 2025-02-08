@@ -43,10 +43,11 @@ class FlexTreeLayout implements IFlexTreeLayout {
 
   private getNodeRect(node: FlexTreeNode): BoundingBox {
     const MAX_NODE_HEIGHT = 360;
+    const DEFAULT_SIBLING_SPACING = 40
     const size = this.options.nodeSize?.(node) ?? [0, 0];
     
     // Get the height from node state or fall back to size parameter
-    const height = node.data.state.size?.[1] ?? size[1];
+    const height = size[1];
     
     // Only use MAX_NODE_HEIGHT if we have no height value
     const effectiveHeight = height ? Math.min(height, MAX_NODE_HEIGHT) : MAX_NODE_HEIGHT;
@@ -55,7 +56,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
       x: node.x,
       y: node.y,
       width: size[0],
-      height: effectiveHeight
+      height: effectiveHeight + (this.options.siblingSpacing ?? DEFAULT_SIBLING_SPACING)
     };
   }
 
@@ -89,7 +90,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
     parentX: number = 0
   ): { boundingBox: BoundingBox; offset: number } {
     const nodeRect = this.getNodeRect(node);
-    
+      
     // Position this node vertically
     node.y = currentY;
 
@@ -153,22 +154,16 @@ class FlexTreeLayout implements IFlexTreeLayout {
     parentY: number = 0
   ): { boundingBox: BoundingBox; offset: number } {
     const nodeRect = this.getNodeRect(node);
-    console.log({
-      height: nodeRect.height,
-      y: parentY,
-      children: node.children?.length || 0,
-      where: 'd3-flextree'
-    });
     
     // Position this node horizontally
     node.x = currentX;
 
     if (!node.children || node.children.length === 0) {
-      node.y = parentY + nodeRect.height / 2;
+      node.y = parentY;
       return {
         boundingBox: {
           x: node.x,
-          y: node.y - nodeRect.height / 2,
+          y: node.y,
           width: nodeRect.width,
           height: nodeRect.height
         },
@@ -180,49 +175,41 @@ class FlexTreeLayout implements IFlexTreeLayout {
     const childBoxes: BoundingBox[] = [];
     let currentChildY = parentY;
 
-    // First pass: calculate total height needed
+    // First pass: calculate child positions and total height
     node.children.forEach((child, i) => {
       const childRect = this.getNodeRect(child);
+      
+      // Add spacing between siblings, but with more reasonable values
       if (i > 0) {
-        const spacing = Math.max(this.options.minSpacing ?? 4, 
-          Math.min(childRect.height * 0.05, this.options.siblingSpacing ?? 8));
-        totalChildrenHeight += spacing;
+        // Use a smaller base spacing and smaller proportional factor
+        const spacing = Math.max(
+          this.options.siblingSpacing ?? 16,  // Reduced default spacing
+          childRect.height * 0.1  // Reduced to 10% of node height as minimum spacing
+        );
+        currentChildY += spacing;
       }
-      totalChildrenHeight += childRect.height;
-    });
 
-    // Start position for first child - center the children block
-    currentChildY = parentY + (nodeRect.height - totalChildrenHeight) / 2;
-
-    // Second pass: position children
-    node.children.forEach((child, i) => {
       const result = this.computeLayoutLR(
         child,
-        currentX + nodeRect.width + this.options.levelSpacing!,
+        currentX + nodeRect.width + (this.options.levelSpacing ?? 10),
         currentChildY
       );
+      
       childBoxes.push(result.boundingBox);
-
-      if (i < node.children!.length - 1) {
-        const nextChild = node.children![i + 1];
-        const nextChildRect = this.getNodeRect(nextChild);
-        
-        const spacing = Math.max(this.options.minSpacing ?? 4, 
-          Math.min(result.boundingBox.height * 0.05, this.options.siblingSpacing ?? 8));
-        
-        currentChildY += result.boundingBox.height + spacing;
-      }
+      currentChildY += result.boundingBox.height;
+      totalChildrenHeight = currentChildY - parentY;
     });
 
-    // Center the parent node vertically
-    node.y = parentY + nodeRect.height / 2;
+    // Center the parent node relative to its children
+    node.y = parentY + (totalChildrenHeight / 2) - (nodeRect.height / 2);
 
+    // Calculate the final bounding box
     const boundingBox = {
       x: currentX,
       y: parentY,
-      width: nodeRect.width + this.options.levelSpacing! + 
+      width: nodeRect.width + (this.options.levelSpacing ?? 10) + 
         Math.max(...childBoxes.map(box => box.width)),
-      height: Math.max(nodeRect.height, totalChildrenHeight)
+      height: Math.max(totalChildrenHeight, nodeRect.height)
     };
 
     return { boundingBox, offset: parentY };
@@ -279,6 +266,9 @@ class FlexTreeLayout implements IFlexTreeLayout {
       height: rootSize[1],
     };
 
+    let leftBoundingBox: BoundingBox = { x: 0, y: 0, width: 0, height: 0 };
+    let rightBoundingBox: BoundingBox = { x: 0, y: 0, width: 0, height: 0 };
+
     // Layout left side
     if (leftChildren.length > 0) {
       const leftRoot = this.hierarchy({
@@ -290,7 +280,12 @@ class FlexTreeLayout implements IFlexTreeLayout {
         direction: Direction.RL,
       });
       leftLayout.layout(leftRoot);
-      // (Additional centering code for left children if needed.)
+      leftBoundingBox = leftLayout.computeSubtreeBoundingBox(leftRoot);
+      leftRoot.descendants().forEach((d) => {
+        d.x -= leftBoundingBox.width + this.options.levelSpacing!;
+        // Adjust y to center align with the root.
+        d.y -= (leftBoundingBox.height - root.data.state.rect.height) / 2;
+      });
     }
 
     // Layout right side
@@ -304,8 +299,45 @@ class FlexTreeLayout implements IFlexTreeLayout {
         direction: Direction.LR,
       });
       rightLayout.layout(rightRoot);
-      // (Additional centering code for right children if needed.)
+      rightBoundingBox = rightLayout.computeSubtreeBoundingBox(rightRoot);
+      rightRoot.descendants().forEach((d) => {
+        d.x += this.options.levelSpacing!;
+        // Adjust y to center align with the root.
+        d.y -= (rightBoundingBox.height - root.data.state.rect.height) / 2;
+      });
     }
+
+    // Adjust root position to center the layout
+    const totalWidth = leftBoundingBox.width + rightBoundingBox.width + this.options.levelSpacing!;
+root.x = totalWidth / 2;
+
+// Calculate effective heights
+const leftEffectiveHeight = leftChildren.length > 0 ? leftBoundingBox.height : root.data.state.rect.height;
+const rightEffectiveHeight = rightChildren.length > 0 ? rightBoundingBox.height : root.data.state.rect.height;
+const effectiveHeight = Math.max(leftEffectiveHeight, rightEffectiveHeight);
+
+root.y = (effectiveHeight / 2) - (root.data.state.rect.height / 2);
+
+// Calculate the center of the root node.
+const rootCenterY = root.y + (root.data.state.rect.height / 2);
+
+// Now, calculate the translation offsets based on the subtree centers.
+// Each subtree's center is (boundingBox.y + effectiveHeight/2)
+const leftTranslateY = leftChildren.length > 0 ?
+  (rootCenterY - (leftBoundingBox.y + leftEffectiveHeight / 2)) :
+  (rootCenterY - (root.data.state.rect.height / 2));
+
+const rightTranslateY = rightChildren.length > 0 ?
+  (rootCenterY - (rightBoundingBox.y + rightEffectiveHeight / 2)) :
+  (rootCenterY - (root.data.state.rect.height / 2));
+
+
+console.log({
+  effectiveHeight,
+  leftTranslateY,
+  rightTranslateY,
+  y: root
+});
 
     return root;
   }

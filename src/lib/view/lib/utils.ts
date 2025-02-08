@@ -114,6 +114,15 @@ class MindMapUtils implements IMindMapTreeUtils {
   static createDefaultRect(): Rect {
     return {x:0, y: 0, height: 0, width: 0}
   }
+
+  static computeRectWithSize(rect: Rect, size: [number, number]): Rect {
+    return {
+      x: rect.x,
+      y: rect.y,
+      width: size[0],
+      height: size[1],
+    };
+  }
 }
 
 
