@@ -1,4 +1,4 @@
-import { INode } from '../types';
+import { INode } from "../common";
 
 export const getSimpleSampleData = (): INode => ({
   content: 'Root',
@@ -11,10 +11,13 @@ export const getSimpleSampleData = (): INode => ({
       ],
     },
     {
-      content: 'Child 2',
+      content: 'flextree() is a factory function that returns a layout instance. A layout is a function that computes the positions of nodes in a tree diagram. Properties attached to the layout control various parameters of the algorithm. flextree() is a factory function that returns a layout instance. A layout is a function that computes the positions of nodes in a tree diagram. Properties attached to the layout control various parameters of the algorithm.', 
       children: [
-        { content: 'Grandchild 2.1', children: [] },
-        { content: 'Grandchild 2.2', children: [] },
+        { content: 'flextree() is a factory function that returns a layout instance. A layout is a function that computes the positions of nodes in a tree diagram. Properties attached to the layout control various parameters of the algorithm. flextree() is a factory function that returns a layout instance. A layout is a function that computes the positions of nodes in a tree diagram. Properties attached to the layout control various parameters of the algorithm.', children: [] },
+        { 
+          content: 'flextree() is a factory function that returns a layout instance. A layout is a function that computes the positions of nodes in a tree diagram. Properties attached to the layout control various parameters of the algorithm. flextree() is a factory function that returns a layout instance. A layout is a function that computes the positions of nodes in a tree diagram. Properties attached to the layout control various parameters of the algorithm.', 
+          children: [] 
+        },
       ],
     },
   ],
@@ -29,13 +32,13 @@ export const getComplexSampleData = (): INode => ({
         {
           content: 'Sub A1',
           children: [
-            { content: 'Item A1.1' },
-            { content: 'Item A1.2' },
+            { content: 'Item A1.1', children: [] },
+            { content: 'Item A1.2', children: [] },
             {
               content: 'Item A1.3',
               children: [
-                { content: 'Item A1.3.1' },
-                { content: 'Item A1.3.2' },
+                { content: 'Item A1.3.1', children: [] },
+                { content: 'Item A1.3.2', children: [] },
                 {
                   content: 'Item A1.3.3',
                   children: [

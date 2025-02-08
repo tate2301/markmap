@@ -9,10 +9,11 @@ interface NodeWrapperProps {
   onClick?: (node: INode, event: React.MouseEvent) => void;
   isSelected?: boolean;
   transform: string;
+  onSizeChange?: (node: INode, width: number, height: number) => void;
 }
 
 const NodeWrapper = memo(
-  ({ node, nodeSize, onClick, isSelected, transform }: NodeWrapperProps) => {
+  ({ node, nodeSize, onClick, isSelected, transform, onSizeChange }: NodeWrapperProps) => {
     const { shouldAnimate } = node.state;
 
     return (
@@ -29,6 +30,7 @@ const NodeWrapper = memo(
           nodeSize={nodeSize}
           onClick={onClick}
           isSelected={isSelected}
+          onSizeChange={onSizeChange}
         />
       </motion.g>
     );

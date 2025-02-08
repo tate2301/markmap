@@ -24,7 +24,10 @@ export class SimpleTreeRenderer {
   private nodeHandler: INodeHandler;
   private nodeRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
   private nodePositions: Map<string, Rect> = new Map()
+  private nodeSizes: Map<string, {width: number, height: number}> = new Map()
   private linkPositions: Map<string, { source: { x: number; y: number }, target: { x: number; y: number } }> = new Map();
+  private layoutTimeout: ReturnType<typeof setTimeout> | null = null;
+
 
   constructor(
     g: d3.Selection<any, any, any, any>,
@@ -106,8 +109,6 @@ export class SimpleTreeRenderer {
     this.render()
   }
 
-
-
   private renderElement = (node: INode, transform: string, animate: boolean = true) => {
     const options = this.stateManager.getOptions()
     return createElement(NodeWrapper, {
@@ -117,8 +118,47 @@ export class SimpleTreeRenderer {
       onClick: this.nodeHandler.handleNodeClick,
       isSelected: node === this.stateManager.getSelectedNode(),
       transform: transform,
+      onSizeChange: this.handleNodeSizeChange,
     })
+  }
 
+  private handleNodeSizeChange = (node: INode, width: number, height: number) => {
+    // Get previous size from our tracking Map
+    const prevNodeSize = this.nodeSizes.get(node.state.key) ?? {
+      width: node.state.size[0],
+      height: node.state.size[1]
+    }
+
+    const hasSizeChanged = prevNodeSize.width !== width || prevNodeSize.height !== height
+    console.log({
+      where: "renderer",
+      height,
+      hasSizeChanged,
+      prevHeight: prevNodeSize.height,
+      newHeight: height
+    });
+
+    // Update size immediately if changed
+    if (hasSizeChanged) {
+      // Update the node's state
+      node.state.size = [width, height];
+      
+      // Store the new size in our tracking Map
+      this.nodeSizes.set(node.state.key, { width, height });
+     
+      console.log("Rerendering the layout with values", {height, width})
+      
+      // Clear any pending layout timeout
+      if (this.layoutTimeout) {
+        clearTimeout(this.layoutTimeout);
+      }
+      
+      // Schedule a new layout update with a short delay to batch multiple size changes
+      this.layoutTimeout = setTimeout(() => {
+        console.log('Triggering layout update after size changes');
+        this.render();
+      }, 50); // 50ms delay to batch changes
+    }
   }
 
   private shouldAnimateLink(
@@ -136,7 +176,6 @@ export class SimpleTreeRenderer {
   
     return (movedSourceX || movedSourceY || movedTargetX || movedTargetY);
   }
-
 
   render(): void {
     const data = this.stateManager.getData();
@@ -156,7 +195,21 @@ export class SimpleTreeRenderer {
       direction: options.direction,
       levelSpacing: options.levelSpacing,
       siblingSpacing: options.siblingSpacing,
-      nodeSize: () => options.nodeSize ?? defaultOptions.nodeSize,
+      nodeSize: (node: FlexTreeNode) => {
+        // Use the node's stored size if available, otherwise fall back to default
+
+        const storedSize = this.nodePositions.get(node.data.state.key)
+        if(storedSize) {
+          node.data.state.size = [storedSize.width, storedSize.height]
+        }
+
+        console.log({size: node.data.state.size, stored: this.nodeSizes.get(node.data.state.key)})
+
+
+        return node.data.state.size && node.data.state.size[0] > 0 && node.data.state.size[1] > 0
+          ? node.data.state.size
+          : options.nodeSize ?? defaultOptions.nodeSize;
+      },
     });
   
     const root = tree.hierarchy(initializedData);
@@ -550,6 +603,11 @@ export class SimpleTreeRenderer {
 
   // Add cleanup method
   destroy() {
+    // Clear any pending timeouts
+    if (this.layoutTimeout) {
+      clearTimeout(this.layoutTimeout);
+    }
+    
     // Unmount all React roots
     this.nodeRoots.forEach((root) => {
       root.unmount();

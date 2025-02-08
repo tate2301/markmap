@@ -139,8 +139,6 @@ const Path = ({
     }
   };
 
-  console.log({animateFlag})
-
   return (
     <motion.path
       className="link"
