@@ -34,10 +34,9 @@ class BasicMindMapNodeHandler extends MindMapNodeHandler {
       this.renderer.updateFolds(node);
     } else {
       this.stateManager.setSelectedNode(node);
-      if (!node.payload) node.payload = { fold: 0 };
-      node.payload.fold = node.payload.fold ? 0 : 1;
+      
     }
-    this.renderer.updateHighlight();
+    this.renderer.render();
 
     // Execute custom handler if provided
     if (this.customHandler) {

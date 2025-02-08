@@ -38,6 +38,6 @@ export const defaultOptions: Required<IMarkmapOptions> = {
   lineWidth: () => 2,
   nodeSize: [280, 40],
   nodePadding: 10,
-  levelSpacing: 120 * 3,
-  siblingSpacing: 60,
+  levelSpacing: 40,
+  siblingSpacing: 16,
 };

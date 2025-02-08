@@ -15,6 +15,14 @@ export type Rect = {
   height: number;
 }
 
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+
 export interface INodeState {
   id: number;
   depth: number;
@@ -151,6 +159,6 @@ export interface SimpleTreeOptions {
   direction?: Direction;
   nodePadding?: number;
   levelSpacing?: number;
-  siblingSpacing?: number;
+  siblingSpacing?: number; // Default: 8px
   showToolbar?: boolean;
 }

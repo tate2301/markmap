@@ -6,7 +6,7 @@ import {
 } from './node-handler';
 import { TreeStateManager } from './state-manager';
 import { treeStyles } from '../tree-styles';
-import { Direction, FlexTreeNode, INode, Rect } from '../types';
+import { Direction, FlexTreeNode, INode, Rect, BoundingBox } from '../types';
 import { initializeNode, MindMapUtils } from './utils';
 import { createElement } from 'react';
 import flextree from '../d3-flextree';
@@ -23,10 +23,13 @@ export class SimpleTreeRenderer {
   private styleNode: d3.Selection<SVGStyleElement, unknown, null, undefined>;
   private nodeHandler: INodeHandler;
   private nodeRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
-  private nodePositions: Map<string, Rect> = new Map()
-  private nodeSizes: Map<string, {width: number, height: number}> = new Map()
+  private nodePositions: Map<string, Rect> = new Map();
+  private nodeSizes: Map<string, {width: number, height: number}> = new Map();
   private linkPositions: Map<string, { source: { x: number; y: number }, target: { x: number; y: number } }> = new Map();
   private layoutTimeout: ReturnType<typeof setTimeout> | null = null;
+  private renderQueue: Set<string> = new Set(); // Track nodes that need updates
+  private isRenderScheduled: boolean = false;
+  private boundingBoxCache: Map<string, BoundingBox> = new Map();
 
  
   constructor(
@@ -123,33 +126,135 @@ export class SimpleTreeRenderer {
   }
 
   private handleNodeSizeChange = (node: INode, width: number, height: number) => {
-    // Get previous size from our tracking Map
-    const prevNodeSize = this.nodeSizes.get(node.state.key) ?? {
-      width: node.state.size[0],
-      height: node.state.size[1]
+    const nodeKey = node.state.key;
+    const prevSize = this.nodeSizes.get(nodeKey);
+    
+    if (!prevSize || prevSize.width !== width || prevSize.height !== height) {
+      node.state.size = [width, height];
+      this.nodeSizes.set(nodeKey, { width, height });
+      this.renderQueue.add(nodeKey);
+      this.scheduleRender();
+    }
+  }
+
+  private scheduleRender = () => {
+    if (this.isRenderScheduled) return;
+    
+    this.isRenderScheduled = true;
+    if (this.layoutTimeout) clearTimeout(this.layoutTimeout);
+    
+    this.layoutTimeout = setTimeout(() => {
+      this.processRenderQueue();
+      this.isRenderScheduled = false;
+    }, 50);
+  }
+
+  private processRenderQueue() {
+    if (this.renderQueue.size === 0) return;
+    
+    const affectedNodes = Array.from(this.renderQueue);
+    this.renderQueue.clear();
+    this.boundingBoxCache.clear();
+    
+    // If more than 30% of nodes are affected, do a full render
+    const totalNodes = this.nodePositions.size;
+    if (affectedNodes.length > totalNodes * 0.3) {
+      this.render();
+      return;
     }
 
-    const hasSizeChanged = prevNodeSize.width !== width || prevNodeSize.height !== height
+    // Otherwise, update only affected nodes and their connections
+    this.updatePartialRender(affectedNodes);
+  }
 
-    // Update size immediately if changed
-    if (hasSizeChanged) {
-      // Update the node's state
-      node.state.size = [width, height];
-      
-      // Store the new size in our tracking Map
-      this.nodeSizes.set(node.state.key, { width, height });
-     
-      
-      // Clear any pending layout timeout
-      if (this.layoutTimeout) {
-        clearTimeout(this.layoutTimeout);
+  private updatePartialRender(nodeKeys: string[]) {
+    const data = this.stateManager.getData();
+    if (!data) return;
+
+    const options = this.stateManager.getOptions();
+    const tree = flextree({
+      direction: options.direction,
+      levelSpacing: options.levelSpacing,
+      siblingSpacing: options.siblingSpacing,
+      nodeSize: (node: FlexTreeNode) => {
+        const storedSize = this.nodeSizes.get(node.data.state.key);
+        return storedSize ? [storedSize.width, storedSize.height] : options.nodeSize ?? defaultOptions.nodeSize;
+      },
+    });
+
+    const root = tree.hierarchy(data);
+    tree.layout(root);
+
+    nodeKeys.forEach(nodeKey => {
+      const node = root.descendants().find(d => d.data.state.key === nodeKey);
+      if (node) {
+        this.updateNodeAndConnections(node, options);
       }
+    });
+  }
+
+  private updateNodeAndConnections(node: FlexTreeNode, options: any) {
+    const nodeKey = node.data.state.key;
+    const nodeSelection = this.g.selectAll(`g.node-wrapper[data-key="${nodeKey}"]`);
+    
+    if (!nodeSelection.empty()) {
+      const transform = `translate(${node.data.state.rect.x},${node.data.state.rect.y})`;
+      const root = this.nodeRoots.get(nodeKey);
       
-      // Schedule a new layout update with a short delay to batch multiple size changes
-      this.layoutTimeout = setTimeout(() => {
-        console.log('Triggering layout update after size changes');
-        this.render();
-      }, 50); // 50ms delay to batch changes
+      if (root) {
+        root.render(
+          createElement(
+            StrictMode,
+            null,
+            this.renderElement(node.data, transform, true)
+          )
+        );
+      }
+
+      // Update connected links
+      if (node.parent) {
+        this.updateLink(node.parent, node);
+      }
+      if (node.children) {
+        node.children.forEach(child => this.updateLink(node, child));
+      }
+    }
+  }
+
+  private updateLink(source: FlexTreeNode, target: FlexTreeNode) {
+    const linkKey = `${source.data.state.key}-${target.data.state.key}`;
+    const linkSelection = this.g.select(`g.link-container[data-link="${linkKey}"]`);
+    
+    if (!linkSelection.empty()) {
+      const sourceRect = this.computeNodeRectWithSize(source.data);
+      const targetRect = this.computeNodeRectWithSize(target.data);
+      
+      const options = this.stateManager.getOptions()
+      const root = createRoot(linkSelection.node() as HTMLElement);
+      root.render(
+        createElement(
+          StrictMode,
+          null,
+          createElement(Path, {
+            source: {
+              x: sourceRect.x,
+              y: sourceRect.y,
+              rect: sourceRect,
+            },
+            target: {
+              x: targetRect.x,
+              y: targetRect.y,
+              rect: targetRect,
+            },
+            direction: options.direction ?? defaultOptions.direction,
+            nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
+            sourceDirection: source.data.direction,
+            targetDirection: target.data.direction,
+            sourceDepth: source.depth,
+            animateFlag: true,
+          })
+        )
+      );
     }
   }
 

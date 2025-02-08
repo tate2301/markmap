@@ -28,7 +28,7 @@ export interface MindmapConfig {
 export interface MindmapProps {
   data: INode;
   config?: MindmapConfig;
-  onNodeClick?: (node: INode) => void;
+  onNodeClick?: (node: INode, e: React.MouseEvent) => void;
   onNodeShiftClick?: (node: INode) => void;
   onDirectionChange?: (direction: Direction) => void;
   className?: string;
@@ -36,7 +36,7 @@ export interface MindmapProps {
 }
 
 const defaultConfig: MindmapConfig = {
-  initialDirection: Direction.CENTER,
+  initialDirection: Direction.LR,
   backgroundColor: '#f5f5f5',
   controls: {
     show: true,
@@ -63,7 +63,7 @@ export const Mindmap = ({
   const treeRef = useRef<SimpleTree | null>(null);
   const [currentData, setCurrentData] = useState<INode>(data);
   const [highlightNode, setHighlightNode] = useState<INode | null>(null);
-  const [direction, setDirection] = useState<Direction>(Direction.CENTER); //mergedConfig.initialDirection!);
+  const [direction, setDirection] = useState<Direction>(Direction.LR); //mergedConfig.initialDirection!);
   const [selectedNode, setSelectedNode] = useState<INode | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [totalNodes, setTotalNodes] = useState(0);
@@ -94,7 +94,7 @@ export const Mindmap = ({
             onNodeShiftClick?.(node);
           } else {
             setSelectedNode(node);
-            onNodeClick?.(node);
+            onNodeClick?.(node, event);
           }
         },
       );
@@ -147,7 +147,7 @@ export const Mindmap = ({
       onNodeShiftClick?.(node);
     } else {
       setSelectedNode(node);
-      onNodeClick?.(node);
+      onNodeClick?.(node, event);
     }
   };
 

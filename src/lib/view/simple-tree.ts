@@ -54,8 +54,8 @@ export class SimpleTree {
       nodeSize: options.nodeSize ?? [100, 30],
       direction: options.direction ?? Direction.LR,
       nodePadding: options.nodePadding ?? 10,
-      levelSpacing: options.levelSpacing ?? 120,
-      siblingSpacing: options.siblingSpacing ?? 40,
+      levelSpacing: options.levelSpacing ?? 20,
+      siblingSpacing: options.siblingSpacing ?? 8,
       showToolbar: options.showToolbar ?? true,
       ...options,
     };

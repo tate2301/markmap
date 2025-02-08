@@ -17,18 +17,25 @@ interface ILayoutStrategy {
   getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number];
 }
 
+// Reuse result object to reduce allocations
+const sharedResult: LayoutResult = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+};
+
 class LRLayoutStrategy implements ILayoutStrategy {
   transformCoordinates(
     x: number,
     y: number,
     size: [number, number],
   ): LayoutResult {
-    return {
-      x: x,
-      y: y ,
-      width: size[0],
-      height: size[1],
-    };
+    sharedResult.x = x;
+    sharedResult.y = y;
+    sharedResult.width = size[0];
+    sharedResult.height = size[1];
+    return sharedResult;
   }
 
   getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
@@ -42,12 +49,11 @@ class RLLayoutStrategy implements ILayoutStrategy {
     y: number,
     size: [number, number],
   ): LayoutResult {
-    return {
-      x: -x,
-      y: y,
-      width: size[0],
-      height: size[1],
-    };
+    sharedResult.x = -x;
+    sharedResult.y = y;
+    sharedResult.width = size[0];
+    sharedResult.height = size[1];
+    return sharedResult;
   }
 
   getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
@@ -61,12 +67,11 @@ class TBLayoutStrategy implements ILayoutStrategy {
     y: number,
     size: [number, number],
   ): LayoutResult {
-    return {
-      x,
-      y,
-      width: size[0],
-      height: size[1],
-    };
+    sharedResult.x = x;
+    sharedResult.y = y;
+    sharedResult.width = size[0];
+    sharedResult.height = size[1];
+    return sharedResult;
   }
 
   getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
@@ -80,12 +85,11 @@ class BTLayoutStrategy implements ILayoutStrategy {
     y: number,
     size: [number, number],
   ): LayoutResult {
-    return {
-      x,
-      y: -y,
-      width: size[0],
-      height: size[1],
-    };
+    sharedResult.x = x;
+    sharedResult.y = -y;
+    sharedResult.width = size[0];
+    sharedResult.height = size[1];
+    return sharedResult;
   }
 
   getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
@@ -94,6 +98,9 @@ class BTLayoutStrategy implements ILayoutStrategy {
 }
 
 class CenterLayoutStrategy implements ILayoutStrategy {
+  private cachedStrategy: ILayoutStrategy | null = null;
+  private cachedDirection: Direction | null = null;
+
   transformCoordinates(
     x: number,
     y: number,
@@ -101,41 +108,37 @@ class CenterLayoutStrategy implements ILayoutStrategy {
     node?: FlexTreeNode,
   ): LayoutResult {
     if (node?.data.direction === Direction.CENTER) {
-      return {
-        x: 0,
-        y: 0,
-        width: size[0],
-        height: size[1],
-      };
+      sharedResult.x = 0;
+      sharedResult.y = 0;
+      sharedResult.width = size[0];
+      sharedResult.height = size[1];
+      return sharedResult;
     } else {
-      return getLayoutStrategy(node?.data.direction ?? Direction.LR).transformCoordinates(
-        x,
-        y,
-        size,
-      );
+      const direction = node?.data.direction ?? Direction.LR;
+      if (this.cachedDirection !== direction) {
+        this.cachedStrategy = getLayoutStrategy(direction);
+        this.cachedDirection = direction;
+      }
+      return this.cachedStrategy!.transformCoordinates(x, y, size);
     }
   }
 
   getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
-    return [siblingSpacing * 1.5, levelSpacing]; // Increased sibling spacing for better centering
+    return [siblingSpacing * 1.5, levelSpacing];
   }
 }
 
+// Cache layout strategy instances
+const strategyCache: Record<Direction, ILayoutStrategy> = {
+  [Direction.LR]: new LRLayoutStrategy(),
+  [Direction.RL]: new RLLayoutStrategy(),
+  [Direction.TB]: new TBLayoutStrategy(),
+  [Direction.BT]: new BTLayoutStrategy(),
+  [Direction.CENTER]: new CenterLayoutStrategy(),
+};
+
 function getLayoutStrategy(direction: Direction): ILayoutStrategy {
-  switch (direction) {
-    case Direction.LR:
-      return new LRLayoutStrategy();
-    case Direction.RL:
-      return new RLLayoutStrategy();
-    case Direction.TB:
-      return new TBLayoutStrategy();
-    case Direction.BT:
-      return new BTLayoutStrategy();
-    case Direction.CENTER:
-      return new CenterLayoutStrategy();
-    default:
-      return new LRLayoutStrategy();
-  }
+  return strategyCache[direction] || strategyCache[Direction.LR];
 }
 
 export { getLayoutStrategy };

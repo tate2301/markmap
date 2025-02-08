@@ -5,19 +5,15 @@ import {
   IFlexTreeOptions,
   Direction,
   IFlexTreeLayout,
+  BoundingBox,
 } from './types';
 import { getLayoutStrategy, ILayoutStrategy } from './layout-strategies';
 
-interface BoundingBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 class FlexTreeLayout implements IFlexTreeLayout {
+
   private readonly options: IFlexTreeOptions;
   private readonly layoutStrategy: ILayoutStrategy;
+  private readonly resultCache: Map<string, BoundingBox> = new Map();
 
   constructor(options: Partial<IFlexTreeOptions> = {}) {
     this.options = {
@@ -42,22 +38,26 @@ class FlexTreeLayout implements IFlexTreeLayout {
   }
 
   private getNodeRect(node: FlexTreeNode): BoundingBox {
+    const cacheKey = `${node.data.state.key || node.data.state.id}`;
+    const cached = this.resultCache.get(cacheKey);
+    if (cached) return cached;
+
     const MAX_NODE_HEIGHT = 360;
-    const DEFAULT_SIBLING_SPACING = 40
+    const DEFAULT_SIBLING_SPACING = 8;
     const size = this.options.nodeSize?.(node) ?? [0, 0];
     
-    // Get the height from node state or fall back to size parameter
     const height = size[1];
-    
-    // Only use MAX_NODE_HEIGHT if we have no height value
     const effectiveHeight = height ? Math.min(height, MAX_NODE_HEIGHT) : MAX_NODE_HEIGHT;
     
-    return {
+    const result = {
       x: node.x,
       y: node.y,
       width: size[0],
       height: effectiveHeight + (this.options.siblingSpacing ?? DEFAULT_SIBLING_SPACING)
     };
+
+    this.resultCache.set(cacheKey, result);
+    return result;
   }
 
   private computeSubtreeBoundingBox(node: FlexTreeNode): BoundingBox {
@@ -159,6 +159,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
     node.x = currentX;
 
     if (!node.children || node.children.length === 0) {
+      // For leaf nodes, use the exact parentY position
       node.y = parentY;
       return {
         boundingBox: {
@@ -167,7 +168,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
           width: nodeRect.width,
           height: nodeRect.height
         },
-        offset: parentY
+        offset: node.y + nodeRect.height  // Return the bottom position for next sibling
       };
     }
 
@@ -179,14 +180,9 @@ class FlexTreeLayout implements IFlexTreeLayout {
     node.children.forEach((child, i) => {
       const childRect = this.getNodeRect(child);
       
-      // Add spacing between siblings, but with more reasonable values
+      // Add fixed 8px spacing between siblings
       if (i > 0) {
-        // Use a smaller base spacing and smaller proportional factor
-        const spacing = Math.max(
-          this.options.siblingSpacing ?? 16,  // Reduced default spacing
-          childRect.height * 0.1  // Reduced to 10% of node height as minimum spacing
-        );
-        currentChildY += spacing;
+        currentChildY += 8; // Fixed 8px spacing
       }
 
       const result = this.computeLayoutLR(
@@ -196,7 +192,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
       );
       
       childBoxes.push(result.boundingBox);
-      currentChildY += result.boundingBox.height;
+      currentChildY = result.offset; // Use the returned offset for next sibling
       totalChildrenHeight = currentChildY - parentY;
     });
 
@@ -212,10 +208,14 @@ class FlexTreeLayout implements IFlexTreeLayout {
       height: Math.max(totalChildrenHeight, nodeRect.height)
     };
 
-    return { boundingBox, offset: parentY };
+    return { boundingBox, offset: parentY + boundingBox.height };
+
   }
 
   layout = (root: FlexTreeNode): FlexTreeNode => {
+    // Clear cache at the start of new layout
+    this.resultCache.clear();
+
     if (this.options.direction === Direction.CENTER) {
       return this.layoutCentered(root);
     }
@@ -226,22 +226,24 @@ class FlexTreeLayout implements IFlexTreeLayout {
       this.computeLayoutTB(root, 0, 0);
     }
 
-    // Transform coordinates and set final rect
-    root.descendants().forEach((d) => {
-      const size = this.options.nodeSize?.(d as FlexTreeNode) ?? [0, 0];
-      const result = this.layoutStrategy.transformCoordinates(
-        d.x,
-        d.y,
-        size,
-        d as FlexTreeNode,
-      );
+    const nodeSize = this.options.nodeSize;
+    const strategy = this.layoutStrategy;
+    
+    // Batch process descendants
+    const descendants = root.descendants();
+    const len = descendants.length;
+    for (let i = 0; i < len; i++) {
+      const d = descendants[i];
+      const size = nodeSize?.(d as FlexTreeNode) ?? [0, 0];
+      const result = strategy.transformCoordinates(d.x, d.y, size, d as FlexTreeNode);
+      
       d.data.state.rect = {
         x: result.x,
         y: result.y,
         width: result.width,
         height: result.height,
       };
-    });
+    }
 
     return root;
   };
