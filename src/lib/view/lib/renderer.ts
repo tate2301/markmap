@@ -6,7 +6,7 @@ import {
 } from './node-handler';
 import { TreeStateManager } from './state-manager';
 import { treeStyles } from '../tree-styles';
-import { Direction, INode } from '../types';
+import { Direction, FlexTreeNode, INode, Rect } from '../types';
 import { initializeNode, MindMapUtils } from './utils';
 import { createElement } from 'react';
 import flextree from '../d3-flextree';
@@ -23,6 +23,8 @@ export class SimpleTreeRenderer {
   private styleNode: d3.Selection<SVGStyleElement, unknown, null, undefined>;
   private nodeHandler: INodeHandler;
   private nodeRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
+  private nodePositions: Map<string, Rect> = new Map()
+  private linkPositions: Map<string, { source: { x: number; y: number }, target: { x: number; y: number } }> = new Map();
 
   constructor(
     g: d3.Selection<any, any, any, any>,
@@ -100,44 +102,13 @@ export class SimpleTreeRenderer {
     return newNode;
   }
 
-  updateNode = (node: INode) => {
-    const transform = `translate(${node.state.rect.x},${node.state.rect.y})`;
-    const element = this.findElement(node)
-    // element?.remove()
-
-    const newElement  = this.renderElement(node, transform)
-    // element?.replaceWith(newElement)
-    
-    // we want to replace the element with the new element
-    // but we want to keep the same root
-    let root = this.nodeRoots.get(node.state.key);
-    if (root) {
-      root.render(newElement)
-    }
-
-    const _newElement = this.findElement(node)
-
-    type DNode = {
-      data: INode & {parent: INode},
-    }
-    const childElements = this.g
-    .selectAll('g.node-wrapper')
-    .filter((d) => {
-      
-      console.log({
-        parent: (d as DNode).data.parent, node, d
-      })
-      return (d as DNode).data.parent === node; // This checks if the node's parent is our target node
-    });
-
-
-    console.log({ _newElement, childElements})
-
+  updateFolds(node: INode) {
+    this.render()
   }
 
-  
 
-  private renderElement = (node: INode, transform: string) => {
+
+  private renderElement = (node: INode, transform: string, animate: boolean = true) => {
     const options = this.stateManager.getOptions()
     return createElement(NodeWrapper, {
       key: node.state.key,
@@ -147,48 +118,100 @@ export class SimpleTreeRenderer {
       isSelected: node === this.stateManager.getSelectedNode(),
       transform: transform,
     })
-    
+
   }
 
- 
+  private shouldAnimateLink(
+    prev: { source: { x: number; y: number }; target: { x: number; y: number } } | undefined,
+    next: { source: { x: number; y: number }; target: { x: number; y: number } },
+    threshold = 0.1
+  ): boolean {
+    // If link didn't exist previously => animate in
+    if (!prev) return true;
+  
+    const movedSourceX = Math.abs(next.source.x - prev.source.x) > threshold;
+    const movedSourceY = Math.abs(next.source.y - prev.source.y) > threshold;
+    const movedTargetX = Math.abs(next.target.x - prev.target.x) > threshold;
+    const movedTargetY = Math.abs(next.target.y - prev.target.y) > threshold;
+  
+    return (movedSourceX || movedSourceY || movedTargetX || movedTargetY);
+  }
+
+
   render(): void {
     const data = this.stateManager.getData();
     if (!data) return;
-
-
+  
     // Clear the roots map when doing a full re-render
     this.nodeRoots.clear();
-
+  
     const options = this.stateManager.getOptions();
     const initializedData = initializeNode(data, 0, options.direction);
-
+  
     // Clear existing content
     this.g.selectAll('*').remove();
-
+  
+    // Build the flextree layout
     const tree = flextree({
       direction: options.direction,
       levelSpacing: options.levelSpacing,
       siblingSpacing: options.siblingSpacing,
       nodeSize: () => options.nodeSize ?? defaultOptions.nodeSize,
     });
-
+  
     const root = tree.hierarchy(initializedData);
     tree.layout(root);
-
-    // Draw links using React components
-    const links = this.g
+  
+    // --------------------------------------------------
+    // 1) HELPER to check if a node's rect changed
+    // --------------------------------------------------
+    const rectHasChanged = (
+      nodeKey: string,
+      nextRect: Rect,
+      threshold = 0.1
+    ): boolean => {
+      // If node not previously tracked => it's "new," so we say it changed
+      const prevRect = this.nodePositions.get(nodeKey);
+      if (!prevRect) return true;
+  
+      const deltaX = Math.abs(nextRect.x - prevRect.x);
+      const deltaY = Math.abs(nextRect.y - prevRect.y);
+      return (deltaX > threshold || deltaY > threshold);
+    };
+  
+    // --------------------------------------------------
+    // 2) RENDER LINKS, animate if source/target node rect changed
+    // --------------------------------------------------
+    const linkSelection = this.g
       .selectAll('g.link-container')
       .data(root.links())
       .join('g')
       .attr('class', 'link-container');
-
-    links.each((d, i, elements) => {
+  
+    linkSelection.each((d, i, elements) => {
+      // Unique key for this link
       const container = elements[i];
-      createRoot(container as HTMLElement).render(
+      const linkKey = d.source.data.state.key + '-' + d.target.data.state.key;
+  
+      // Check if either node has moved
+      const sourceChanged = rectHasChanged(
+        d.source.data.state.key,
+        d.source.data.state.rect
+      );
+      const targetChanged = rectHasChanged(
+        d.target.data.state.key,
+        d.target.data.state.rect
+      );
+      const animateFlag = sourceChanged || targetChanged;
+  
+      // Render the link with animateFlag
+      const reactRoot = createRoot(container as HTMLElement);
+      reactRoot.render(
         createElement(
           StrictMode,
           null,
           createElement(Path, {
+            // Pass the computed source/target positions
             source: {
               x: d.source.data.state.rect.x,
               y: d.source.data.state.rect.y,
@@ -204,38 +227,65 @@ export class SimpleTreeRenderer {
             sourceDirection: d.source.data.direction,
             targetDirection: d.target.data.direction,
             sourceDepth: d.source.depth,
-          }),
-        ),
+  
+            // Our new animation flag
+            animateFlag: animateFlag,
+          })
+        )
       );
     });
-
+  
+    // --------------------------------------------------
+    // 3) RENDER NODES
+    // --------------------------------------------------
     const nodes = this.g
       .selectAll('g.node-wrapper')
       .data(root.descendants())
       .join('g')
       .attr('class', 'node-wrapper');
-
+  
     nodes.selectAll('*').remove();
-
+  
+    // Helper to decide whether a node is new or moved
+    const shouldAnimateNode = (prev: Rect | undefined, next: Rect, threshold = 0.1): boolean => {
+      if (!prev) return true; // new node or not tracked
+      const deltaX = Math.abs(next.x - prev.x);
+      const deltaY = Math.abs(next.y - prev.y);
+      return (deltaX > threshold || deltaY > threshold);
+    };
+  
     nodes.each((d, i, elements) => {
       const container = elements[i];
-      const transform = `translate(${d.data.state.rect.x},${d.data.state.rect.y})`;
-
+      const newRect: Rect = d.data.state.rect;
+      const prevRect = this.nodePositions.get(d.data.state.key);
+  
+      // Is this node new or significantly moved?
+      const animateFlag = shouldAnimateNode(prevRect, newRect);
+      d.data.state.shouldAnimate = animateFlag;
+  
+      // Update stored position for next time
+      this.nodePositions.set(d.data.state.key, { ...newRect });
+  
+      // The transform for this node
+      const transform = `translate(${newRect.x},${newRect.y})`;
+  
       // Create new root and store it
-      const root = createRoot(container as HTMLElement);
-      this.nodeRoots.set(d.data.state.key, root);
-
-      root.render(
+      const reactRoot = createRoot(container as HTMLElement);
+      this.nodeRoots.set(d.data.state.key, reactRoot);
+  
+      reactRoot.render(
         createElement(
           StrictMode,
           null,
-          this.renderElement(d.data, transform)
-        ),
+          this.renderElement(d.data, transform, d.data.state.shouldAnimate)
+        )
       );
     });
-
+  
+    // Optionally call highlight function, etc.
     this.updateHighlight();
   }
+  
 
   setDirection(direction: Direction) {
     this.stateManager.setOptions({ direction });
@@ -321,12 +371,12 @@ export class SimpleTreeRenderer {
     const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
 
     this.svg
-        .transition()
-        .duration(750)
-        .call(
-            this.zoom.transform,
-            d3.zoomIdentity.translate(centerX, centerY).scale(scale)
-        );
+      .transition()
+      .duration(750)
+      .call(
+        this.zoom.transform,
+        d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+      );
   }
 
   resetView(): void {
@@ -351,9 +401,9 @@ export class SimpleTreeRenderer {
       .scale(scale)
       .translate(
         -(center.x * currentTransform.k + currentTransform.x) /
-          currentTransform.k,
+        currentTransform.k,
         -(center.y * currentTransform.k + currentTransform.y) /
-          currentTransform.k,
+        currentTransform.k,
       );
 
     this.svg.transition().duration(300).call(this.zoom.transform, transform);
@@ -366,7 +416,7 @@ export class SimpleTreeRenderer {
     const bounds = nodeElement.getBBox();
     const width = this.svg.node()?.clientWidth || 800;
     const height = this.svg.node()?.clientHeight || 600;
-    
+
     // Get current transform to maintain the current scale
     const currentTransform = this.svg.property('__zoom') || d3.zoomIdentity;
     const scale = currentTransform.k;
@@ -376,12 +426,12 @@ export class SimpleTreeRenderer {
     const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
 
     this.svg
-        .transition()
-        .duration(300)
-        .call(
-            this.zoom.transform,
-            d3.zoomIdentity.translate(centerX, centerY).scale(scale)
-        );
+      .transition()
+      .duration(300)
+      .call(
+        this.zoom.transform,
+        d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+      );
   }
 
   public ensureVisible(node: INode): void {
@@ -394,26 +444,26 @@ export class SimpleTreeRenderer {
 
     const currentTransform = this.svg.property('__zoom') || d3.zoomIdentity;
     const viewportBounds = {
-        x: -currentTransform.x / currentTransform.k,
-        y: -currentTransform.y / currentTransform.k,
-        width: width / currentTransform.k,
-        height: height / currentTransform.k,
+      x: -currentTransform.x / currentTransform.k,
+      y: -currentTransform.y / currentTransform.k,
+      width: width / currentTransform.k,
+      height: height / currentTransform.k,
     };
 
     // If node is not visible, center it
     if (!this.isRectVisible(bounds, viewportBounds)) {
-        // Calculate center position while maintaining current scale
-        const scale = currentTransform.k;
-        const centerX = width / 2 - (bounds.x + bounds.width / 2) * scale;
-        const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
+      // Calculate center position while maintaining current scale
+      const scale = currentTransform.k;
+      const centerX = width / 2 - (bounds.x + bounds.width / 2) * scale;
+      const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
 
-        this.svg
-            .transition()
-            .duration(300)
-            .call(
-                this.zoom.transform,
-                d3.zoomIdentity.translate(centerX, centerY).scale(scale)
-            );
+      this.svg
+        .transition()
+        .duration(300)
+        .call(
+          this.zoom.transform,
+          d3.zoomIdentity.translate(centerX, centerY).scale(scale)
+        );
     }
   }
 
@@ -421,10 +471,10 @@ export class SimpleTreeRenderer {
     const nodeElements = this.g.selectAll('g.node-wrapper');
     let matchingElement: SVGGElement | null = null;
 
-    nodeElements.each(function(d: any) {
-        if (d?.data === node) {
-            matchingElement = this as SVGGElement;
-        }
+    nodeElements.each(function (d: any) {
+      if (d?.data === node) {
+        matchingElement = this as SVGGElement;
+      }
     });
 
     return matchingElement;
@@ -437,10 +487,10 @@ export class SimpleTreeRenderer {
     // Add some padding to ensure the node isn't right at the edge
     const padding = 20;
     return !(
-        rect.x + rect.width + padding < viewport.x ||
-        rect.x - padding > viewport.x + viewport.width ||
-        rect.y + rect.height + padding < viewport.y ||
-        rect.y - padding > viewport.y + viewport.height
+      rect.x + rect.width + padding < viewport.x ||
+      rect.x - padding > viewport.x + viewport.width ||
+      rect.y + rect.height + padding < viewport.y ||
+      rect.y - padding > viewport.y + viewport.height
     );
   }
 
@@ -456,7 +506,7 @@ export class SimpleTreeRenderer {
     if (!newNode) return;
 
     if (recursive) {
-      this.toggleRecursive(newNode);
+      this.toggleRecursive(newNode, true);
     } else {
       if (!newNode.payload) newNode.payload = { fold: 0 };
       newNode.payload.fold = newNode.payload.fold ? 0 : 1;
@@ -465,9 +515,13 @@ export class SimpleTreeRenderer {
     // this.render(); // Add this to ensure the view updates
   }
 
-  private toggleRecursive(node: INode): void {
+  private toggleRecursive(node: INode, isParent?: boolean): void {
     if (!node.payload) node.payload = { fold: 0 };
     node.payload.fold = node.payload.fold ? 0 : 1;
+
+    if (node.payload.fold === 1 && !isParent) {
+      this.nodePositions.set(node.state.key, MindMapUtils.createDefaultRect())
+    }
 
     // Recursively toggle all children
     if (node.children) {

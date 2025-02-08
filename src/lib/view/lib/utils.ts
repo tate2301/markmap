@@ -1,4 +1,4 @@
-import { Direction, INode } from '../types';
+import { Direction, INode, Rect } from '../types';
 
 export interface IPureNode {
   content: string;
@@ -28,9 +28,10 @@ function initializeNode(
     id: Math.random(),
     size: [0, 0],
     rect: { x: 0, y: 0, width: 0, height: 0 },
-    key: `node-${depth}-${Math.random()}`,
     path: `${depth}`,
+    key: node.state?.key ?? `node-${Math.random()}`
   };
+
 
   // Set parent reference
   node.parent = parentNode;
@@ -109,7 +110,13 @@ class MindMapUtils implements IMindMapTreeUtils {
 
     return data ? search(data) : null;
   }
+
+  static createDefaultRect(): Rect {
+    return {x:0, y: 0, height: 0, width: 0}
+  }
 }
+
+
 
 export type { IMindMapTreeUtils };
 export { MindMapUtils, initializeNode };

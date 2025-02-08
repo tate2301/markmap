@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useState } from 'react';
 import { Direction, INode } from '../lib/view/types';
 import { cn } from '../utils';
-import {motion} from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface NodeProps {
   node: INode;
@@ -35,8 +35,28 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
+  const variants = {
+    initial: {
+      opacity: 0,
+      scale: 0.8,
+      x: node.direction === Direction.RL ? -40 : 40
+    },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      width: nodeSize[0],
+      height: nodeSize[1],
+      x: 0,
+
+    },
+    exit: { opacity: 0, scale: 0.8 },
+  };
+
+  const { shouldAnimate } = node.state
+
+
   return (
-    <g className={cn('node', { 'selected': isSelected })} onClick={handleClick}>
+    <motion.g className={cn('node', { 'selected': isSelected })} onClick={handleClick}>
       <rect
         width={nodeSize[0]}
         height={nodeSize[1]}
@@ -52,24 +72,10 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
           layout="position"
           layoutId={`node-${node.state.key}`}
           onDoubleClick={onEdit}
-          initial={{
-            width: 0,
-            opacity: 0,
-            x: node.direction === Direction.RL ? -40 : 40
-          }}
-          animate={{
-            width: nodeSize[0],
-            opacity: 1,
-            x: 0,
-            originX: !node.direction ? nodeSize[0]/2 : node.direction === Direction.RL ? nodeSize[0]  : 1,
-            transition: {
-              ease: "easeIn",
-            }
-          }}
-          exit={{
-            height: 0,
-            opacity: 0
-          }}
+          variants={variants}
+          initial={shouldAnimate ? "initial" : false}
+          animate={shouldAnimate ? 'animate' : {}}
+          exit={shouldAnimate ? 'exit' : {}}
           style={{
             width: '100%',
             display: 'flex',
@@ -84,13 +90,12 @@ const Node = ({ node, nodeSize, onClick, isSelected }: NodeProps) => {
           className={cn('bg-white rounded-lg p-2 border-2 border-transparent transition-all duration-300 ease-out', {
             'border-2 border-green-500': isSelected,
             'hover:border-2 hover:border-blue-500': !isSelected,
-
           })}
         >
           {node.content}
         </motion.div>
       </foreignObject>
-    </g>
+    </motion.g>
   );
 };
 

@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Direction } from '../lib/view/types';
 
@@ -20,6 +21,7 @@ interface PathProps {
   sourceDirection?: Direction;
   targetDirection?: Direction;
   sourceDepth?: number;
+  animateFlag?: boolean
 }
 
 const Path = ({
@@ -29,6 +31,7 @@ const Path = ({
   nodeSize,
   targetDirection,
   sourceDepth,
+  animateFlag = false
 }: PathProps) => {
   const generatePath = () => {
     // Handle centered layout
@@ -136,6 +139,8 @@ const Path = ({
     }
   };
 
+  console.log({animateFlag})
+
   return (
     <motion.path
       className="link"
@@ -143,8 +148,9 @@ const Path = ({
       stroke="#000"
       strokeWidth={1.5}
       d={generatePath()}
-      initial={{ pathLength: 0, opacity: 0 }}
+      initial={animateFlag ? { pathLength: 0, opacity: 0 } : false}
       animate={{ pathLength: 1, opacity: 1 }}
+      exit={animateFlag ? { pathLength: 0, opacity: 0 } : {}}
       transition={{ duration: 0.5 }}
     />
   );

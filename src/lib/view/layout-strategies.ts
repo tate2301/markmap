@@ -24,8 +24,8 @@ class LRLayoutStrategy implements ILayoutStrategy {
     size: [number, number],
   ): LayoutResult {
     return {
-      x: y,
-      y: x,
+      x: x,
+      y: y ,
       width: size[0],
       height: size[1],
     };
@@ -43,8 +43,8 @@ class RLLayoutStrategy implements ILayoutStrategy {
     size: [number, number],
   ): LayoutResult {
     return {
-      x: -y,
-      y: x,
+      x: -x,
+      y: y,
       width: size[0],
       height: size[1],
     };

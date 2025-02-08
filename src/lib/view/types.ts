@@ -8,6 +8,13 @@ export enum Direction {
   CENTER = 'center',
 }
 
+export type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface INodeState {
   id: number;
   depth: number;
@@ -15,12 +22,9 @@ export interface INodeState {
   key: string;
   size: [number, number];
   color?: string;
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  rect: Rect;
+  prevRect?: Rect
+  shouldAnimate?: boolean
 }
 
 export interface INode extends IBaseNode {

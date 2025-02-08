@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { INode } from '../lib/view/types';
 import Node from './Node';
-import { AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface NodeWrapperProps {
   node: INode;
@@ -13,17 +13,24 @@ interface NodeWrapperProps {
 
 const NodeWrapper = memo(
   ({ node, nodeSize, onClick, isSelected, transform }: NodeWrapperProps) => {
+    const { shouldAnimate } = node.state;
+
     return (
-      <AnimatePresence>
-        <g className="node-container" transform={transform}>
+      <motion.g 
+        key={node.state.key}
+        className="node-container" 
+        transform={transform}
+        initial={shouldAnimate ? { opacity: 0 } : false}
+        animate={shouldAnimate ? { opacity: 1 } : {}}
+        exit={{ opacity: 0 }}
+      >
         <Node
           node={node}
           nodeSize={nodeSize}
           onClick={onClick}
           isSelected={isSelected}
         />
-      </g>
-      </AnimatePresence>
+      </motion.g>
     );
   },
   (prevProps, nextProps) => {
