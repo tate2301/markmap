@@ -1,3 +1,4 @@
+// @ts-nocheck
 import MarkdownIt from 'markdown-it';
 import md_ins from 'markdown-it-ins';
 import md_mark from 'markdown-it-mark';

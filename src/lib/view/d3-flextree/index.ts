@@ -6,8 +6,8 @@ import {
   Direction,
   IFlexTreeLayout,
   BoundingBox,
-} from './types';
-import { getLayoutStrategy, ILayoutStrategy } from './layout-strategies';
+} from '../types';
+import { getLayoutStrategy, ILayoutStrategy } from '../strategies';
 
 class FlexTreeLayout implements IFlexTreeLayout {
 

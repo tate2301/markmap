@@ -40,11 +40,16 @@ export default definePlugin({
 
 function normalizeMarkmapJsonOptions(options?: Partial<IMarkmapJSONOptions>) {
   if (!options) return;
+  type keyType =  keyof IMarkmapJSONOptions
   ['color', 'extraJs', 'extraCss'].forEach((key) => {
-    if (options[key] != null) options[key] = normalizeStringArray(options[key]);
+    if (options[key as keyType] != null) {
+      // @ts-ignore
+      options[key] = normalizeStringArray(options[key])
+    };
   });
   ['duration', 'maxWidth', 'initialExpandLevel'].forEach((key) => {
-    if (options[key] != null) options[key] = normalizeNumber(options[key]);
+    // @ts-ignore
+    if (options[key as keyType] != null) options[key] = normalizeNumber(options[key]);
   });
   return options;
 }

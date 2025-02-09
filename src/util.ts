@@ -1,4 +1,4 @@
-import { CSSItem, JSItem, UrlBuilder } from '../../common';
+import { CSSItem, JSItem, UrlBuilder } from './common';
 
 export function patchJSItem(urlBuilder: UrlBuilder, item: JSItem): JSItem {
   if (item.type === 'script' && item.data.src) {

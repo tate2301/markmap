@@ -1,10 +1,12 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from 'react';
 import { SimpleTree, SimpleTreeOptions } from '../lib/view/simple-tree';
 
 import { Direction, IEnhancedNode } from '../lib/view/types';
 import { Controls } from './Controls';
 import { DevToolbar } from './DevToolbar';
-import { MarkmapFactory } from '../lib/view/factory';
+import { MarkmapFactory } from '../lib/view/simple-tree/factory';
 import './globals.css';
 // @ts-ignore
 import dottedBg from '../assets/dotted-bg.svg?raw';

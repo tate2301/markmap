@@ -1,16 +1,16 @@
 // SimpleTree.ts
 import { select, zoom } from 'd3';
-import { Direction, IMarkmapOptions, IMarkmapState, IEnhancedNode } from './types';
+import { Direction, IMarkmapOptions, IMarkmapState, IEnhancedNode } from '../types';
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { ToolBar } from '../../components/ToolBar';
+import { ToolBar } from '../../../components/ToolBar';
 import {
   BasicMindMapNodeOperations,
   IMindMapTreeNodeOperations,
-} from './lib/node-operations';
-import { SimpleTreeRenderer } from './lib/renderer';
-import { TreeStateManager } from './lib/state-manager';
-export type { SimpleTreeOptions } from './types';
+} from './node-operations';
+import { SimpleTreeRenderer } from './renderer';
+import { TreeStateManager } from './state-manager';
+export type { SimpleTreeOptions } from '../types';
 
 const treeStyles = `
   .node rect {
@@ -160,12 +160,12 @@ export class SimpleTree {
     this.renderer.rescale(scale);
   }
 
-  render(data: IEnhancedNode) {
+  public render(data: IEnhancedNode) {
     this.setData(data);
     this.renderer.render();
   }
 
-  setDirection(direction: Direction) {
+  public setDirection(direction: Direction) {
     this.renderer.setDirection(direction);
   }
 
@@ -205,11 +205,11 @@ export class SimpleTree {
     this.treeOperations.setSelected(node);
   }
 
-  updateHighlight() {
+  public updateHighlight() {
     this.renderer.updateHighlight();
   }
 
-  toggleNode(node: IEnhancedNode, recursive: boolean = false): void {
+  public toggleNode(node: IEnhancedNode, recursive: boolean = false): void {
     this.renderer.toggleNode(node, recursive);
     this.renderer.render();
   }

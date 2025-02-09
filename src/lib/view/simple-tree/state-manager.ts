@@ -1,9 +1,8 @@
 import { defaultOptions } from '../constants';
-import { IMarkmapOptions, IMarkmapState, IEnhancedNode } from '../types';
+import { IMarkmapOptions, IEnhancedNode } from '../types';
 import { SimpleTreeRenderer } from './renderer';
 
 export class TreeStateManager {
-  private state: IMarkmapState = {};
   private selectedNode: IEnhancedNode | null = null;
   private currentData: IEnhancedNode | null = null;
   private options: Required<IMarkmapOptions> = defaultOptions;

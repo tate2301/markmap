@@ -1,9 +1,9 @@
-import { IPureNode, MindMapUtils } from './lib/utils';
-import { SimpleTree } from './simple-tree';
-import { IMarkmapOptions } from './types';
+import { IPureNode, MindMapUtils } from './utils';
+import { SimpleTree } from '.';
+import { IMarkmapOptions } from '../types';
 
-import { defaultOptions } from './constants';
-import { TreeStateManager } from './lib/state-manager';
+import { defaultOptions } from '../constants';
+import { TreeStateManager } from './state-manager';
 
 export interface ID3SVGElement extends SVGElement {
   __markmap?: any;

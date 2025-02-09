@@ -1,0 +1,39 @@
+import { ILayoutStrategy, LayoutResult, sharedResult } from "./ILayoutStrategy";
+
+class LRLayoutStrategy implements ILayoutStrategy {
+    transformCoordinates(
+      x: number,
+      y: number,
+      size: [number, number],
+    ): LayoutResult {
+      sharedResult.x = x;
+      sharedResult.y = y;
+      sharedResult.width = size[0];
+      sharedResult.height = size[1];
+      return sharedResult;
+    }
+  
+    getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
+      return [siblingSpacing, levelSpacing];
+    }
+  }
+  
+  class RLLayoutStrategy implements ILayoutStrategy {
+    transformCoordinates(
+      x: number,
+      y: number,
+      size: [number, number],
+    ): LayoutResult {
+      sharedResult.x = -x;
+      sharedResult.y = y;
+      sharedResult.width = size[0];
+      sharedResult.height = size[1];
+      return sharedResult;
+    }
+  
+    getNodeSize(levelSpacing: number, siblingSpacing: number): [number, number] {
+      return [siblingSpacing, levelSpacing];
+    }
+  }
+
+export {LRLayoutStrategy, RLLayoutStrategy}

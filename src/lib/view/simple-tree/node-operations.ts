@@ -33,7 +33,6 @@ export class BasicMindMapNodeOperations extends MindMapTreeNodeOperations {
   async setSelected(node: IEnhancedNode | null): Promise<void> {
     this.stateManager.setSelectedNode(node || null);
     await this.renderer.render();
-    this.renderer.updateNodes();
     this.renderer.updateHighlight();
   }
 

@@ -12,7 +12,7 @@ import {
   ITransformResult,
   ITransformer,
 } from './types';
-import { patchCSSItem, patchJSItem } from './util';
+import { patchCSSItem, patchJSItem } from '../../util';
 import { IEnhancedNode } from '../view';
 
 export const builtInPlugins =  availablePlugins;
@@ -145,7 +145,7 @@ export class Transformer implements ITransformer {
       } as IEnhancedNode;
       
       if (node.children) {
-        nodeWithState.children = node.children.map((child, index) => 
+        nodeWithState.children = node.children.map((child) => 
           initNode(child, depth + 1, nodeWithState.state?.path)
         );
       }

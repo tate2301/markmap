@@ -27,22 +27,10 @@ export default defineConfig({
   build: {
     target: 'esnext',
     lib: {
-        entry: resolve(__dirname, './src/lib/index.ts'),
+        entry: resolve(__dirname, './src/index.ts'),
       name: 'ReactMindmap',
       formats: ['es', 'umd'],
       fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
     },
-    rollupOptions: {
-      external: ['react', 'react-dom'],
-      output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-        },
-        manualChunks: {
-          'layout-worker': ['./src/lib/view/workers/layout.worker.ts']
-        }
-      }
-    }
   }
 });
