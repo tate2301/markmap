@@ -46,4 +46,10 @@ const NodeWrapper = memo(
 
 NodeWrapper.displayName = 'NodeWrapper';
 
-export default NodeWrapper;
+const areEqual = (prev: NodeWrapperProps, next: NodeWrapperProps) => 
+  prev.node === next.node &&
+  prev.isSelected === next.isSelected &&
+  prev.transform === next.transform;
+
+export default React.memo(NodeWrapper, areEqual);
+

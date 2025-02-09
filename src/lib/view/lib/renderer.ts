@@ -20,9 +20,11 @@ export class SimpleTreeRenderer {
   private g: d3.Selection<any, any, any, any>;
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
+  private spatialIndex: d3.Quadtree<d3.HierarchyNode<INode>> | null = null;
   private styleNode: d3.Selection<SVGStyleElement, unknown, null, undefined>;
   private nodeHandler: INodeHandler;
   private nodeRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
+  private linkRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
   private nodePositions: Map<string, Rect> = new Map();
   private nodeSizes: Map<string, {width: number, height: number}> = new Map();
   private linkPositions: Map<string, { source: { x: number; y: number }, target: { x: number; y: number } }> = new Map();
@@ -34,6 +36,32 @@ export class SimpleTreeRenderer {
   private currentTransform: d3.ZoomTransform | null = null;
   private previousNodeKeys: Set<string> = new Set();
   private previousFoldStates: Map<string, number> = new Map();
+
+  private handleZoom = (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+    this.currentTransform = event.transform;
+    this.g.attr('transform', event.transform.toString());
+    
+    // Clear any existing render timeout
+    if (this.layoutTimeout) {
+      clearTimeout(this.layoutTimeout);
+    }
+    
+    // Clear previous states during zoom to prevent animations
+    this.previousNodeKeys.clear();
+    this.previousFoldStates.clear();
+    
+    // Update viewport and schedule render
+    this.updateViewport();
+    
+    // Use requestAnimationFrame for smooth updates during continuous pan/zoom
+    if (!this.isRenderScheduled) {
+      this.isRenderScheduled = true;
+      requestAnimationFrame(() => {
+        this.render();
+        this.isRenderScheduled = false;
+      });
+    }
+  };
 
   constructor(
     g: d3.Selection<any, any, any, any>,
@@ -48,31 +76,7 @@ export class SimpleTreeRenderer {
     this.zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 2])
-      .on('zoom', (event) => {
-        this.currentTransform = event.transform;
-        this.g.attr('transform', event.transform);
-        
-        // Clear any existing render timeout
-        if (this.layoutTimeout) {
-          clearTimeout(this.layoutTimeout);
-        }
-        
-        // Clear previous states during zoom to prevent animations
-        this.previousNodeKeys.clear();
-        this.previousFoldStates.clear();
-        
-        // Update viewport and immediately process visible nodes
-        this.updateViewport();
-        
-        // Use requestAnimationFrame for smooth updates during continuous pan/zoom
-        if (!this.isRenderScheduled) {
-          this.isRenderScheduled = true;
-          requestAnimationFrame(() => {
-            this.render(); // Call render instead of just processVisibleNodes
-            this.isRenderScheduled = false;
-          });
-        }
-      });
+      .on('zoom', this.handleZoom);
 
     this.svg.call(this.zoom);
 
@@ -269,41 +273,30 @@ export class SimpleTreeRenderer {
   }
 
   private updateLink(source: FlexTreeNode, target: FlexTreeNode) {
-    const linkKey = `${source.data.state.key}-${target.data.state.key}`;
-    const linkSelection = this.g.select(`g.link-container[data-link="${linkKey}"]`);
+    const sourceRect = this.computeNodeRectWithSize(source.data);
+    const targetRect = this.computeNodeRectWithSize(target.data);
+    const options = this.stateManager.getOptions();
     
-    if (!linkSelection.empty()) {
-      const sourceRect = this.computeNodeRectWithSize(source.data);
-      const targetRect = this.computeNodeRectWithSize(target.data);
-      
-      const options = this.stateManager.getOptions()
-      const root = createRoot(linkSelection.node() as HTMLElement);
-      root.render(
-        createElement(
-          StrictMode,
-          null,
-          createElement(Path, {
-            source: {
-              x: sourceRect.x,
-              y: sourceRect.y,
-              rect: sourceRect,
-            },
-            target: {
-              x: targetRect.x,
-              y: targetRect.y,
-              rect: targetRect,
-            },
-            direction: options.direction ?? defaultOptions.direction,
-            nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
-            sourceDirection: source.data.direction,
-            targetDirection: target.data.direction,
-            sourceDepth: source.depth,
-            animateFlag: false, // Disable animations
-          })
-        )
-      );
-    }
+    return createElement(Path, {
+      source: {
+        x: sourceRect.x,
+        y: sourceRect.y,
+        rect: sourceRect,
+      },
+      target: {
+        x: targetRect.x,
+        y: targetRect.y,
+        rect: targetRect,
+      },
+      direction: options.direction ?? defaultOptions.direction,
+      nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
+      sourceDirection: source.data.direction,
+      targetDirection: target.data.direction,
+      sourceDepth: source.depth,
+      animateFlag: false, // Disable animations for better performance
+    });
   }
+
 
   private shouldAnimateLink(
     prev: { source: { x: number; y: number }; target: { x: number; y: number } } | undefined,
@@ -357,18 +350,48 @@ export class SimpleTreeRenderer {
   }
 
 
+
+  private updateSpatialIndex(nodes: d3.HierarchyNode<INode>[]): void {
+    this.spatialIndex = d3.quadtree<d3.HierarchyNode<INode>>()
+      .x(d => d.data.state.rect.x)
+      .y(d => d.data.state.rect.y)
+      .addAll(nodes);
+  }
+
+  private findVisibleNodes(viewport: { x: number; y: number; width: number; height: number }): d3.HierarchyNode<INode>[] {
+    if (!this.spatialIndex) return [];
+
+    const visibleNodes: d3.HierarchyNode<INode>[] = [];
+    this.spatialIndex.visit((node, x0, y0, x1, y1) => {
+      // Early exit if quadtree node is outside viewport
+      if (x1 < viewport.x || x0 > viewport.x + viewport.width || 
+          y1 < viewport.y || y0 > viewport.y + viewport.height) {
+        return true; // Skip this branch
+      }
+      
+      // Check if this is a leaf node with data
+      if ('data' in node && node.data && 'data' in node.data) {
+        const hierarchyNode = node.data;
+        const nodeRect = this.computeNodeRectWithSize(hierarchyNode.data);
+        const expandedRect = {
+          x: nodeRect.x - 20,
+          y: nodeRect.y - 20,
+          width: nodeRect.width + 40,
+          height: nodeRect.height + 40
+        };
+        if (this.isRectVisible(expandedRect, viewport)) {
+          visibleNodes.push(hierarchyNode);
+        }
+      }
+      return false; // Continue traversing this branch
+    });
+
+    return visibleNodes;
+  }
+
   private isNodeVisible(node: d3.HierarchyNode<INode>): boolean {
     if (!this.currentViewport) return true;
-
-    const nodeRect = this.computeNodeRectWithSize(node.data);
-    const expandedRect = {
-      x: nodeRect.x - 20,
-      y: nodeRect.y - 20,
-      width: nodeRect.width + 40,
-      height: nodeRect.height + 40
-    };
-
-    return this.isRectVisible(expandedRect, this.currentViewport);
+    return this.findVisibleNodes(this.currentViewport).some(n => n === node);
   }
 
 
@@ -464,7 +487,7 @@ export class SimpleTreeRenderer {
 
     // Update existing nodes
     nodeContainers.each((d: any, i, elements) => {
-      this.updateNodeElement(d, elements[i]);
+      this.updateNodeElement(d, elements[i] as Element);
     });
   }
 
@@ -483,7 +506,8 @@ export class SimpleTreeRenderer {
     });
   }
 
-  private updateNodeElement(node: d3.HierarchyNode<INode>, element: Element) {
+  private updateNodeElement(node: d3.HierarchyNode<INode>, element: Element | null) {
+    if(!element) return
     const transform = `translate(${node.data.state.rect.x},${node.data.state.rect.y})`;
     let root = this.nodeRoots.get(node.data.state.key);
     
@@ -492,11 +516,12 @@ export class SimpleTreeRenderer {
       this.nodeRoots.set(node.data.state.key, root);
     }
 
+    // Use React.memo or similar optimization in NodeWrapper component
     root.render(
       createElement(
         StrictMode,
         null,
-        this.renderElement(node.data, transform, node.data.state.shouldAnimate)
+        this.renderElement(node.data, transform, false) // Disable animations for better performance
       )
     );
   }
@@ -519,127 +544,88 @@ export class SimpleTreeRenderer {
     const data = this.stateManager.getData();
     if (!data) return;
 
-    // Store current node keys and fold states before updating
-    this.previousNodeKeys.clear();
-    this.previousFoldStates.clear();
-    
-    // Collect current state
-    const collectState = (node: INode) => {
-      this.previousNodeKeys.add(node.state.key);
-      this.previousFoldStates.set(node.state.key, node.payload?.fold ?? 0);
-      node.children?.forEach(collectState);
-    };
-    collectState(data);
-  
     const options = this.stateManager.getOptions();
     const initializedData = initializeNode(data, 0, options.direction);
-  
-    // Build the flextree layout
-    const tree = flextree({
-      direction: options.direction,
-      levelSpacing: options.levelSpacing,
-      siblingSpacing: Math.max(options.siblingSpacing ?? 8, 8),
-      nodeSize: (node: FlexTreeNode) => {
-        const storedSize = this.nodeSizes.get(node.data.state.key);
-        const size: [number, number] = storedSize 
-          ? [storedSize.width + 8, storedSize.height + 8]
-          : options.nodeSize ?? defaultOptions.nodeSize;
-        return size;
-      },
-    });
-  
+    const tree = this.buildTree(data);
     const root = tree.hierarchy(initializedData);
     tree.layout(root);
-    
-    // Filter visible nodes and get all links connected to visible nodes
-    const allNodes = root.descendants();
-    const visibleNodes = allNodes.filter(node => this.isNodeVisible(node));
+
+    // Update spatial index with all nodes
+    const treeNodes = root.descendants();
+    this.updateSpatialIndex(treeNodes);
+
+    // Get visible nodes using quadtree
+    const visibleNodes = this.findVisibleNodes(this.currentViewport!);
     const visibleNodeKeys = new Set(visibleNodes.map(node => node.data.state.key));
-    
-    // Get all links where at least one endpoint is visible
-    const visibleLinks = root.links().filter(link => 
-      visibleNodeKeys.has(link.source.data.state.key) || 
+
+    // Get visible links
+    const visibleLinks = root.links().filter(link =>
+      visibleNodeKeys.has(link.source.data.state.key) ||
       visibleNodeKeys.has(link.target.data.state.key)
     );
-    
-    // Remove old elements that are no longer needed
-    this.g.selectAll('g.link-container')
-      .data(visibleLinks, (d: any) => `${d.source.data.state.key}-${d.target.data.state.key}`)
-      .join(
+
+    // Efficient DOM updates using d3.join
+    const linkContainers = this.g.selectAll('g.link-container')
+      .data(visibleLinks, (d: any) => `${d.source.data.state.key}-${d.target.data.state.key}`);
+
+    linkContainers.join(
       enter => enter.append('g')
-        .attr('class', 'link-container')
-        .attr('data-link', d => `${d.source.data.state.key}-${d.target.data.state.key}`),
-      update => update,
-      exit => exit.remove()
-      );
-    
-    // Update links
-    this.g.selectAll('g.link-container').each((d: any, i, elements) => {
-      const container = elements[i];
-      const sourceRect = this.computeNodeRectWithSize(d.source.data);
-      const targetRect = this.computeNodeRectWithSize(d.target.data);
-      
-      const reactRoot = createRoot(container as HTMLElement);
-      reactRoot.render(
-        createElement(
-          StrictMode,
-          null,
-          createElement(Path, {
-            source: {
-              x: sourceRect.x,
-              y: sourceRect.y,
-              rect: sourceRect,
-            },
-            target: {
-              x: targetRect.x,
-              y: targetRect.y,
-              rect: targetRect,
-            },
-            direction: options.direction ?? defaultOptions.direction,
-            nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
-            sourceDirection: d.source.data.direction,
-            targetDirection: d.target.data.direction,
-            sourceDepth: d.source.depth,
-            animateFlag: false, // Disable animations
-          })
-        )
-      );
-    });
-  
-    // Update nodes with proper enter/update/exit handling
-    this.g.selectAll('g.node-wrapper')
-      .data(visibleNodes, (d: any) => d.data.state.key)
-      .join(
-        enter => enter.append('g')
-          .attr('class', 'node-wrapper')
-          .attr('data-key', d => d.data.state.key),
-        update => update,
-        exit => exit.remove()
-      )
+      .attr('class', 'link-container')
+      .attr('data-link', d => `${d.source.data.state.key}-${d.target.data.state.key}`)
       .each((d: any, i, elements) => {
-        const container = elements[i];
-        const transform = `translate(${d.data.state.rect.x},${d.data.state.rect.y})`;
-        
-        let reactRoot = this.nodeRoots.get(d.data.state.key);
-        if (!reactRoot) {
-          reactRoot = createRoot(container as HTMLElement);
-          this.nodeRoots.set(d.data.state.key, reactRoot);
+        const linkKey = `${d.source.data.state.key}-${d.target.data.state.key}`;
+        let root = this.linkRoots.get(linkKey);
+        if (!root) {
+        root = createRoot(elements[i] as Element);
+        this.linkRoots.set(linkKey, root);
         }
-        
-        reactRoot.render(
-          createElement(
-            StrictMode,
-            null,
-            this.renderElement(d.data, transform, d.data.state.shouldAnimate)
-          )
+        root.render(
+        createElement(StrictMode, null, this.updateLink(d.source, d.target))
         );
-      });
-  
-    // Cleanup any React roots for nodes that are no longer visible
+      }),
+      update => update.each((d: any, i, elements) => {
+      const linkKey = `${d.source.data.state.key}-${d.target.data.state.key}`;
+      let root = this.linkRoots.get(linkKey);
+      if (!root) {
+        root = createRoot(elements[i] as HTMLElement);
+        this.linkRoots.set(linkKey, root);
+      }
+      root.render(
+        createElement(StrictMode, null, this.updateLink(d.source, d.target))
+      );
+      }),
+      exit => exit.each((d: any) => {
+      const linkKey = `${d.source.data.state.key}-${d.target.data.state.key}`;
+      const root = this.linkRoots.get(linkKey);
+      if (root) {
+        root.unmount();
+        this.linkRoots.delete(linkKey);
+      }
+      }).remove()
+    );
+
+    const nodeContainers = this.g.selectAll('g.node-wrapper')
+      .data(visibleNodes, (d: any) => d.data.state.key);
+
+    nodeContainers.join(
+      enter => enter.append('g')
+        .attr('class', 'node-wrapper')
+        .attr('data-key', d => d.data.state.key)
+        .each((d: any, i, elements) => this.updateNodeElement(d, elements[i])),
+      update => update.each((d: any, i, elements) => this.updateNodeElement(d, elements[i] as Element)),
+      exit => exit.each((d: any) => {
+        const root = this.nodeRoots.get(d.data.state.key);
+        if (root) {
+          root.unmount();
+          this.nodeRoots.delete(d.data.state.key);
+        }
+      }).remove()
+    );
+
     this.cleanupInvisibleNodes();
-  
     this.updateHighlight();
   }
+
   
 
   setDirection(direction: Direction) {
@@ -915,5 +901,13 @@ export class SimpleTreeRenderer {
       root.unmount();
     });
     this.nodeRoots.clear();
+
+    this.linkRoots.forEach((root) => {
+      root.unmount();
+    });
+    this.linkRoots.clear();
+    
+    // Clear spatial index
+    this.spatialIndex = null;
   }
 }

@@ -154,4 +154,4 @@ const Path = ({
   );
 };
 
-export default Path;
+export default React.memo(Path);
