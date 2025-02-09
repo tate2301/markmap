@@ -1,4 +1,3 @@
-import React from 'react';
 import { IEnhancedNode } from '../lib/view/types';
 
 interface DevToolbarProps {
@@ -18,7 +17,6 @@ export const DevToolbar = ({
   totalNodes,
   zoomLevel,
   selectedNode,
-  highlightedNode,
   onFitView,
   onCenterSelected,
   onEnsureVisible,

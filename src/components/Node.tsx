@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Direction, IEnhancedNode } from '../lib/view/types';
 import { cn } from '../utils';
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 interface NodeProps {
   node: IEnhancedNode;
@@ -34,7 +34,7 @@ function getMeasuringDiv() {
 }
 
 const Node = ({ node, nodeSize, onClick, isSelected, onSizeChange }: NodeProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [_, setIsEditing] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: nodeSize[0], height: nodeSize[1] });
 

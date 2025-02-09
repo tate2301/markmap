@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Direction, INode, MindmapConfig } from './lib';
+import { Direction, INode, MindmapConfig } from '.';
 import { Mindmap } from './components/Mindmap';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Transformer } from './lib/core/transform';
@@ -896,7 +896,7 @@ const MindmapPlayground: React.FC<PlaygroundOptions> = ({ controls }) => {
         break;
       case 'expand-more':
         if (node.children?.length) {
-          node.children.forEach((child) => {
+          node.children.forEach((child: INode) => {
             if (!child.payload) child.payload = { fold: 0 };
             child.payload.fold = 0;
           });

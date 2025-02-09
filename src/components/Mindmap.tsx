@@ -8,7 +8,7 @@ import { MarkmapFactory } from '../lib/view/factory';
 import './globals.css';
 // @ts-ignore
 import dottedBg from '../assets/dotted-bg.svg?raw';
-import {MindmapConfig, MindmapProps} from "../lib"
+import {MindmapConfig, MindmapProps} from ".."
 
 
 

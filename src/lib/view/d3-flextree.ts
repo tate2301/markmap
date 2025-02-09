@@ -177,9 +177,7 @@ class FlexTreeLayout implements IFlexTreeLayout {
     let currentChildY = parentY;
 
     // First pass: calculate child positions and total height
-    node.children.forEach((child, i) => {
-      const childRect = this.getNodeRect(child);
-      
+    node.children.forEach((child, i) => {      
       // Add fixed 8px spacing between siblings
       if (i > 0) {
         currentChildY += 8; // Fixed 8px spacing
@@ -320,41 +318,7 @@ const effectiveHeight = Math.max(leftEffectiveHeight, rightEffectiveHeight);
 
 root.y = (effectiveHeight / 2) - (root.data.state.rect.height / 2);
 
-// Calculate the center of the root node.
-const rootCenterY = root.y + (root.data.state.rect.height / 2);
-
-// Now, calculate the translation offsets based on the subtree centers.
-// Each subtree's center is (boundingBox.y + effectiveHeight/2)
-const leftTranslateY = leftChildren.length > 0 ?
-  (rootCenterY - (leftBoundingBox.y + leftEffectiveHeight / 2)) :
-  (rootCenterY - (root.data.state.rect.height / 2));
-
-const rightTranslateY = rightChildren.length > 0 ?
-  (rootCenterY - (rightBoundingBox.y + rightEffectiveHeight / 2)) :
-  (rootCenterY - (root.data.state.rect.height / 2));
-
-
-console.log({
-  effectiveHeight,
-  leftTranslateY,
-  rightTranslateY,
-  y: root
-});
-
     return root;
-  }
-
-  private getNodeSize(): [number, number] {
-    const spacing = this.options.levelSpacing || 20;
-    const siblingSpacing = this.options.siblingSpacing || 10;
-    if (
-      [Direction.TB, Direction.BT].includes(
-        this.options.direction ?? Direction.LR,
-      )
-    ) {
-      return [spacing, siblingSpacing * 2];
-    }
-    return [siblingSpacing, spacing];
   }
 }
 

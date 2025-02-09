@@ -31,7 +31,7 @@ class BasicMindMapNodeHandler extends MindMapNodeHandler {
     // Execute default behavior
     if (event.metaKey) {
       this.renderer.toggleNode(node, true);
-      this.renderer.updateFolds(node);
+      this.renderer.updateFolds();
     } else {
       this.stateManager.setSelectedNode(node);
       

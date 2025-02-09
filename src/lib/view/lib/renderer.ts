@@ -27,7 +27,6 @@ export class SimpleTreeRenderer {
   private linkRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
   private nodePositions: Map<string, Rect> = new Map();
   private nodeSizes: Map<string, {width: number, height: number}> = new Map();
-  private linkPositions: Map<string, { source: { x: number; y: number }, target: { x: number; y: number } }> = new Map();
   private layoutTimeout: ReturnType<typeof setTimeout> | null = null;
   private renderQueue: Set<string> = new Set(); // Track nodes that need updates
   private isRenderScheduled: boolean = false;
@@ -149,11 +148,11 @@ export class SimpleTreeRenderer {
     return newNode;
   }
 
-  updateFolds(node: IEnhancedNode) {
+  updateFolds() {
     this.render()
   }
 
-  private renderElement = (node: IEnhancedNode, transform: string, animate: boolean = true) => {
+  private renderElement = (node: IEnhancedNode, transform: string,) => {
     const options = this.stateManager.getOptions()
     return createElement(NodeWrapper, {
       key: node.state.key,
@@ -239,12 +238,12 @@ export class SimpleTreeRenderer {
     nodeKeys.forEach(nodeKey => {
       const node = root.descendants().find(d => d.data.state.key === nodeKey);
       if (node) {
-        this.updateNodeAndConnections(node, options);
+        this.updateNodeAndConnections(node);
       }
     });
   }
 
-  private updateNodeAndConnections(node: FlexTreeNode, options: any) {
+  private updateNodeAndConnections(node: FlexTreeNode) {
     const nodeKey = node.data.state.key;
     const nodeSelection = this.g.selectAll(`g.node-wrapper[data-key="${nodeKey}"]`);
     
@@ -257,7 +256,7 @@ export class SimpleTreeRenderer {
           createElement(
             StrictMode,
             null,
-            this.renderElement(node.data, transform, true)
+            this.renderElement(node.data, transform)
           )
         );
       }
@@ -297,22 +296,6 @@ export class SimpleTreeRenderer {
     });
   }
 
-
-  private shouldAnimateLink(
-    prev: { source: { x: number; y: number }; target: { x: number; y: number } } | undefined,
-    next: { source: { x: number; y: number }; target: { x: number; y: number } },
-    threshold = 0.1
-  ): boolean {
-    // If link didn't exist previously => animate in
-    if (!prev) return true;
-  
-    const movedSourceX = Math.abs(next.source.x - prev.source.x) > threshold;
-    const movedSourceY = Math.abs(next.source.y - prev.source.y) > threshold;
-    const movedTargetX = Math.abs(next.target.x - prev.target.x) > threshold;
-    const movedTargetY = Math.abs(next.target.y - prev.target.y) > threshold;
-  
-    return (movedSourceX || movedSourceY || movedTargetX || movedTargetY);
-  }
 
   private computeNodeRectWithSize(node: IEnhancedNode)  {
     const size = this.nodeSizes.get(node.state.key) ?? { width: 0, height: 0 };
@@ -389,109 +372,9 @@ export class SimpleTreeRenderer {
     return visibleNodes;
   }
 
-  private isNodeVisible(node: d3.HierarchyNode<IEnhancedNode>): boolean {
-    if (!this.currentViewport) return true;
-    return this.findVisibleNodes(this.currentViewport).some(n => n === node);
-  }
+ 
 
-
-
-
-  private processVisibleNodes() {
-    if (!this.currentViewport) return;
-
-    const data = this.stateManager.getData();
-    if (!data) return;
-
-    const tree = this.buildTree(data);
-    const root = tree.hierarchy(data);
-    tree.layout(root);
-
-    // Get all nodes and their visibility status
-    const allNodes = root.descendants();
-    const visibleNodes = allNodes.filter(node => this.isNodeVisible(node));
-    const visibleNodeKeys = new Set(visibleNodes.map(node => node.data.state.key));
-
-    // Get all links where at least one endpoint is visible
-    const visibleLinks = root.links().filter(link => 
-      visibleNodeKeys.has(link.source.data.state.key) || 
-      visibleNodeKeys.has(link.target.data.state.key)
-    );
-
-    // Update only the nodes and links that are visible
-    this.updateVisibleElements(visibleNodes, visibleLinks);
-  }
-
-  private updateVisibleElements(visibleNodes: d3.HierarchyNode<IEnhancedNode>[], visibleLinks: d3.HierarchyLink<IEnhancedNode>[]) {
-    // Update links first to ensure proper layering
-    const linkContainers = this.g.selectAll('g.link-container')
-      .data(visibleLinks, (d: any) => `${d.source.data.state.key}-${d.target.data.state.key}`);
-
-    // Handle link enter/exit
-    linkContainers.exit().remove();
-    const linkEnter = linkContainers.enter()
-      .append('g')
-      .attr('class', 'link-container')
-      .attr('data-link', d => `${d.source.data.state.key}-${d.target.data.state.key}`);
-
-    // Update all links (both new and existing)
-    linkContainers.merge(linkEnter as any).each((d: any, i, elements) => {
-      const sourceRect = this.computeNodeRectWithSize(d.source.data);
-      const targetRect = this.computeNodeRectWithSize(d.target.data);
-      
-      const options = this.stateManager.getOptions();
-      const root = createRoot(elements[i] as HTMLElement);
-      root.render(
-        createElement(
-          StrictMode,
-          null,
-          createElement(Path, {
-            source: {
-              x: sourceRect.x,
-              y: sourceRect.y,
-              rect: sourceRect,
-            },
-            target: {
-              x: targetRect.x,
-              y: targetRect.y,
-              rect: targetRect,
-            },
-            direction: options.direction ?? defaultOptions.direction,
-            nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
-            sourceDirection: d.source.data.direction,
-            targetDirection: d.target.data.direction,
-            sourceDepth: d.source.depth,
-            animateFlag: false, // Disable animations
-          })
-        )
-      );
-    });
-
-    // Update nodes
-    const nodeContainers = this.g.selectAll('g.node-wrapper')
-      .data(visibleNodes, (d: any) => d.data.state.key);
-
-    // Handle node enter/exit
-    nodeContainers.exit().each((d: any) => {
-      const root = this.nodeRoots.get(d.data.state.key);
-      if (root) {
-        root.unmount();
-        this.nodeRoots.delete(d.data.state.key);
-      }
-    }).remove();
-
-    nodeContainers.enter()
-      .append('g')
-      .attr('class', 'node-wrapper')
-      .attr('data-key', d => d.data.state.key);
-
-    // Update existing nodes
-    nodeContainers.each((d: any, i, elements) => {
-      this.updateNodeElement(d, elements[i] as Element);
-    });
-  }
-
-  private buildTree(data: IEnhancedNode) {
+  private buildTree() {
     const options = this.stateManager.getOptions();
     return flextree({
       direction: options.direction,
@@ -521,7 +404,7 @@ export class SimpleTreeRenderer {
       createElement(
         StrictMode,
         null,
-        this.renderElement(node.data, transform, false) // Disable animations for better performance
+        this.renderElement(node.data, transform) // Disable animations for better performance
       )
     );
   }
@@ -546,7 +429,7 @@ export class SimpleTreeRenderer {
 
     const options = this.stateManager.getOptions();
     const initializedData = initializeNode(data, 0, options.direction);
-    const tree = this.buildTree(data);
+    const tree = this.buildTree();
     const root = tree.hierarchy(initializedData);
     tree.layout(root);
 

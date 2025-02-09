@@ -34,24 +34,4 @@ export class MarkmapFactory {
 
     return simpleTree;
   }
-
-  private static resolveSVGElement(
-    svgOrSelector: string | SVGElement | ID3SVGElement,
-  ): SVGElement {
-    if (typeof svgOrSelector === 'string') {
-      const found = document.querySelector<SVGElement>(svgOrSelector);
-      if (!found) {
-        throw new Error(
-          `SVG element not found for selector "${svgOrSelector}"`,
-        );
-      }
-      return found;
-    } else {
-      return svgOrSelector as SVGElement;
-    }
-  }
-
-  private static getContainer() {
-    return document.createElement('div');
-  }
 }
