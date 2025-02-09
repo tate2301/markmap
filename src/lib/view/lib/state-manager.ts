@@ -1,11 +1,11 @@
 import { defaultOptions } from '../constants';
-import { IMarkmapOptions, IMarkmapState, INode } from '../types';
+import { IMarkmapOptions, IMarkmapState, IEnhancedNode } from '../types';
 import { SimpleTreeRenderer } from './renderer';
 
 export class TreeStateManager {
   private state: IMarkmapState = {};
-  private selectedNode: INode | null = null;
-  private currentData: INode | null = null;
+  private selectedNode: IEnhancedNode | null = null;
+  private currentData: IEnhancedNode | null = null;
   private options: Required<IMarkmapOptions> = defaultOptions;
   private renderer?: SimpleTreeRenderer;
 
@@ -26,24 +26,24 @@ export class TreeStateManager {
     this.renderer = renderer;
   }
 
-  setSelectedNode(node: INode | null) {
+  setSelectedNode(node: IEnhancedNode | null) {
     this.selectedNode = node;
     this.renderer?.updateHighlight();
   }
 
-  getSelectedNode(): INode | null {
+  getSelectedNode(): IEnhancedNode | null {
     return this.selectedNode;
   }
 
-  setData(data: INode | null) {
+  setData(data: IEnhancedNode | null) {
     this.currentData = data;
   }
 
-  getData(): INode | null {
+  getData(): IEnhancedNode | null {
     return this.currentData;
   }
 
-  async toggleNode(node: INode, recursive: boolean): Promise<void> {
+  async toggleNode(node: IEnhancedNode, recursive: boolean): Promise<void> {
     if (recursive) {
       this.toggleRecursive(node);
     } else {
@@ -55,7 +55,7 @@ export class TreeStateManager {
     }
   }
 
-  private toggleRecursive(node: INode): void {
+  private toggleRecursive(node: IEnhancedNode): void {
     if (node.payload) {
       node.payload.fold = node.payload.fold ? 0 : 1;
     } else {

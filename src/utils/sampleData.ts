@@ -1,6 +1,6 @@
-import { INode } from "../common";
+import { INodeWithoutState } from "../common";
 
-export const getSimpleSampleData = (): INode => ({
+export const getSimpleSampleData = (): INodeWithoutState => ({
   content: 'Root',
   children: [
     {
@@ -23,7 +23,7 @@ export const getSimpleSampleData = (): INode => ({
   ],
 });
 
-export const getComplexSampleData = (): INode => ({
+export const getComplexSampleData = (): INodeWithoutState => ({
   content: 'Root Node',
   children: [
     {
@@ -155,7 +155,7 @@ export const getComplexSampleData = (): INode => ({
   ],
 });
 
-export const initializePayload = (node: INode): void => {
+export const initializePayload = (node: INodeWithoutState): void => {
   node.payload = { fold: 0 };
   if (node.children) {
     node.children.forEach((child) => initializePayload(child));

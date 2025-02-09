@@ -1,39 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SimpleTree, SimpleTreeOptions } from '../lib/view/simple-tree';
-import { Direction, INode } from '../lib/view/types';
+
+import { Direction, IEnhancedNode } from '../lib/view/types';
 import { Controls } from './Controls';
 import { DevToolbar } from './DevToolbar';
 import { MarkmapFactory } from '../lib/view/factory';
 import './globals.css';
+// @ts-ignore
 import dottedBg from '../assets/dotted-bg.svg?raw';
+import {MindmapConfig, MindmapProps} from "../lib"
 
-export interface MindmapConfig {
-  initialDirection?: Direction;
-  width?: number;
-  height?: number;
-  backgroundColor?: string;
-  controls?: {
-    show?: boolean;
-    position?: {
-      top?: string;
-      right?: string;
-      bottom?: string;
-      left?: string;
-    };
-    showDirectionControl?: boolean;
-    showDataControl?: boolean;
-  };
-}
 
-export interface MindmapProps {
-  data: INode;
-  config?: MindmapConfig;
-  onNodeClick?: (node: INode, e: React.MouseEvent) => void;
-  onNodeShiftClick?: (node: INode) => void;
-  onDirectionChange?: (direction: Direction) => void;
-  className?: string;
-  style?: React.CSSProperties;
-}
+
+
 
 const defaultConfig: MindmapConfig = {
   initialDirection: Direction.LR,
@@ -61,10 +40,10 @@ export const Mindmap = ({
   const mergedConfig = { ...defaultConfig, ...config };
   const containerRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<SimpleTree | null>(null);
-  const [currentData, setCurrentData] = useState<INode>(data);
-  const [highlightNode, setHighlightNode] = useState<INode | null>(null);
+  const [currentData, setCurrentData] = useState<IEnhancedNode>(data);
+  const [highlightNode, setHighlightNode] = useState<IEnhancedNode | null>(null);
   const [direction, setDirection] = useState<Direction>(Direction.LR); //mergedConfig.initialDirection!);
-  const [selectedNode, setSelectedNode] = useState<INode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<IEnhancedNode | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [totalNodes, setTotalNodes] = useState(0);
 
@@ -82,7 +61,7 @@ export const Mindmap = ({
     // Set custom handler if onNodeClick is provided
     if (onNodeClick) {
       (treeRef.current as any).setCustomNodeHandler(
-        (node: INode, event: React.MouseEvent) => {
+        (node: IEnhancedNode, event: React.MouseEvent) => {
           if (event.shiftKey) {
             if (node.children?.length) {
               node.children.forEach((child) => {
@@ -105,7 +84,14 @@ export const Mindmap = ({
 
   useEffect(() => {
     initializeTree();
+    
+    // Add a small delay to ensure proper initialization
+    const timer = setTimeout(() => {
+      treeRef.current?.fitView();
+    }, 100);
+
     return () => {
+      clearTimeout(timer);
       treeRef.current?.destroy();
     };
   }, []);
@@ -141,7 +127,7 @@ export const Mindmap = ({
     onDirectionChange?.(newDirection);
   };
 
-  const handleNodeClick = (node: INode, event: React.MouseEvent) => {
+  const handleNodeClick = (node: IEnhancedNode, event: React.MouseEvent) => {
     if (event.shiftKey) {
       setHighlightNode(node);
       onNodeShiftClick?.(node);
@@ -151,14 +137,14 @@ export const Mindmap = ({
     }
   };
 
-  const renderData = (data: INode) => {
+  const renderData = (data: IEnhancedNode) => {
     if (treeRef.current) {
       treeRef.current.setCustomNodeHandler(handleNodeClick);
       treeRef.current.render(data);
     }
   };
 
-  const countNodes = (node: INode): number => {
+  const countNodes = (node: IEnhancedNode): number => {
     return (
       1 +
       (node.children?.reduce((sum, child) => sum + countNodes(child), 0) || 0)
@@ -166,7 +152,9 @@ export const Mindmap = ({
   };
 
   const handleFitView = () => {
-    treeRef.current?.fitView();
+    if (treeRef.current) {
+      treeRef.current.fitView();
+    }
   };
 
   const handleCenterSelected = () => {
@@ -186,7 +174,7 @@ export const Mindmap = ({
   };
 
   const handleExpandAll = () => {
-    const expandNode = (node: INode) => {
+    const expandNode = (node: IEnhancedNode) => {
       if (!node.payload) node.payload = { fold: 0 };
       node.payload.fold = 0;
       node.children?.forEach(expandNode);
@@ -196,7 +184,7 @@ export const Mindmap = ({
   };
 
   const handleCollapseAll = () => {
-    const collapseNode = (node: INode) => {
+    const collapseNode = (node: IEnhancedNode) => {
       if (!node.payload) node.payload = { fold: 0 };
       node.payload.fold = 1;
       node.children?.forEach(collapseNode);

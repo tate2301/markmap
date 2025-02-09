@@ -1,19 +1,19 @@
-import { INode } from '../types';
+import { IEnhancedNode } from '../types';
 import { SimpleTreeRenderer } from './renderer';
 import { TreeStateManager } from './state-manager';
 
 export interface IMindMapTreeNodeOperations {
-  create: (parentNode: INode, content: string, position?: number) => INode;
-  setSelected: (node: INode | null) => Promise<void>;
-  applyCollapsing: (node: INode) => INode;
+  create: (parentNode: IEnhancedNode, content: string, position?: number) => IEnhancedNode;
+  setSelected: (node: IEnhancedNode | null) => Promise<void>;
+  applyCollapsing: (node: IEnhancedNode) => IEnhancedNode;
 }
 
 export abstract class MindMapTreeNodeOperations
   implements IMindMapTreeNodeOperations
 {
-  abstract setSelected(node: INode | null): Promise<void>;
-  abstract applyCollapsing(node: INode): INode;
-  abstract create(parentNode: INode, content: string, position?: number): INode;
+  abstract setSelected(node: IEnhancedNode | null): Promise<void>;
+  abstract applyCollapsing(node: IEnhancedNode): IEnhancedNode;
+  abstract create(parentNode: IEnhancedNode, content: string, position?: number): IEnhancedNode;
 }
 
 export class BasicMindMapNodeOperations extends MindMapTreeNodeOperations {
@@ -26,19 +26,19 @@ export class BasicMindMapNodeOperations extends MindMapTreeNodeOperations {
     this.renderer = renderer;
   }
 
-  create(parentNode: INode, content: string, position?: number): INode {
+  create(parentNode: IEnhancedNode, content: string, position?: number): IEnhancedNode {
     return this.renderer.createNode(parentNode, content, position);
   }
 
-  async setSelected(node: INode | null): Promise<void> {
+  async setSelected(node: IEnhancedNode | null): Promise<void> {
     this.stateManager.setSelectedNode(node || null);
     await this.renderer.render();
     this.renderer.updateNodes();
     this.renderer.updateHighlight();
   }
 
-  public applyCollapsing(node: INode): INode {
-    const newNode: INode = {
+  public applyCollapsing(node: IEnhancedNode): IEnhancedNode {
+    const newNode: IEnhancedNode = {
       ...node,
       children: node.children ? [...node.children] : [],
     };

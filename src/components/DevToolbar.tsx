@@ -1,11 +1,11 @@
 import React from 'react';
-import { INode } from '../lib/view/types';
+import { IEnhancedNode } from '../lib/view/types';
 
 interface DevToolbarProps {
   totalNodes: number;
   zoomLevel: number;
-  selectedNode: INode | null;
-  highlightedNode: INode | null;
+  selectedNode: IEnhancedNode | null;
+  highlightedNode: IEnhancedNode | null;
   onFitView: () => void;
   onCenterSelected: () => void;
   onEnsureVisible: () => void;

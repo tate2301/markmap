@@ -1,15 +1,15 @@
 import React, { memo } from 'react';
-import { INode } from '../lib/view/types';
+import { IEnhancedNode } from '../lib/view/types';
 import Node from './Node';
 import { motion } from 'framer-motion';
 
 interface NodeWrapperProps {
-  node: INode;
+  node: IEnhancedNode;
   nodeSize: [number, number];
-  onClick?: (node: INode, event: React.MouseEvent) => void;
+  onClick?: (node: IEnhancedNode, event: React.MouseEvent) => void;
   isSelected?: boolean;
   transform: string;
-  onSizeChange?: (node: INode, width: number, height: number) => void;
+  onSizeChange?: (node: IEnhancedNode, width: number, height: number) => void;
 }
 
 const NodeWrapper = memo(

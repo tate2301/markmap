@@ -1,20 +1,20 @@
-import { INode } from '../types';
+import { IEnhancedNode } from '../types';
 import { SimpleTreeRenderer } from './renderer';
 import { TreeStateManager } from './state-manager';
 
 interface INodeHandler {
-  handleNodeClick: (node: INode, event: React.MouseEvent) => void;
+  handleNodeClick: (node: IEnhancedNode, event: React.MouseEvent) => void;
   setCustomHandler?: (
-    handler: (node: INode, event: React.MouseEvent) => void,
+    handler: (node: IEnhancedNode, event: React.MouseEvent) => void,
   ) => void;
 }
 
 abstract class MindMapNodeHandler implements INodeHandler {
-  protected customHandler?: (node: INode, event: React.MouseEvent) => void;
+  protected customHandler?: (node: IEnhancedNode, event: React.MouseEvent) => void;
 
-  abstract handleNodeClick: (node: INode, event: React.MouseEvent) => void;
+  abstract handleNodeClick: (node: IEnhancedNode, event: React.MouseEvent) => void;
 
-  setCustomHandler(handler: (node: INode, event: React.MouseEvent) => void) {
+  setCustomHandler(handler: (node: IEnhancedNode, event: React.MouseEvent) => void) {
     this.customHandler = handler;
   }
 }
@@ -27,7 +27,7 @@ class BasicMindMapNodeHandler extends MindMapNodeHandler {
     super();
   }
 
-  handleNodeClick = (node: INode, event: React.MouseEvent) => {
+  handleNodeClick = (node: IEnhancedNode, event: React.MouseEvent) => {
     // Execute default behavior
     if (event.metaKey) {
       this.renderer.toggleNode(node, true);

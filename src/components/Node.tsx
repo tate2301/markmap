@@ -1,14 +1,14 @@
 import React, { memo, useEffect, useState, useRef, useLayoutEffect } from 'react';
-import { Direction, INode } from '../lib/view/types';
+import { Direction, IEnhancedNode } from '../lib/view/types';
 import { cn } from '../utils';
 import { AnimatePresence, motion } from 'framer-motion'
 
 interface NodeProps {
-  node: INode;
+  node: IEnhancedNode;
   nodeSize: [number, number];
-  onClick?: (node: INode, event: React.MouseEvent) => void;
+  onClick?: (node: IEnhancedNode, event: React.MouseEvent) => void;
   isSelected?: boolean;
-  onSizeChange?: (node: INode, width: number, height: number) => void;
+  onSizeChange?: (node: IEnhancedNode, width: number, height: number) => void;
 }
 
 const MAX_NODE_HEIGHT = 360;

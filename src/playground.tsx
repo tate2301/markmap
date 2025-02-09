@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
-import { Direction, INode } from './lib/view/types';
-import { Mindmap, MindmapConfig } from './components/Mindmap';
+import { Direction, INode, MindmapConfig } from './lib';
+import { Mindmap } from './components/Mindmap';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import {
-  getSimpleSampleData,
-  getComplexSampleData,
-  initializePayload,
-} from './utils/sampleData';
 import { Transformer } from './lib/core/transform';
-import { IPureNode } from './common';
-import { initializeNode, MindMapUtils } from './lib/view/lib/utils';
 
 interface PlaygroundOptions {
   controls?: boolean;
@@ -794,33 +787,8 @@ const MINDMAPS = [
   { id: 'system-design', label: 'System Design', content: systemDesignMarkdown }
 ];
 
-function getMarkdownData(markdown: string): INode {
-  const result = transformer.transform(markdown);
-  let nextId = 1;
-  const initNode = (node: IPureNode, depth = 0, path = ''): INode => {
-    const id = nextId++;
-    const nodeWithState = {
-      ...node,
-      state: {
-        key: id.toString(),
-        id,
-        depth,
-        path: path ? `${path}.${id}` : id.toString(),
-        size: [280, 0] as [number, number],
-        rect: { x: 0, y: 0, width: 0, height: 0 },
-        shouldAnimate: true
-      }
-    } as INode;
-    
-    if (node.children) {
-      nodeWithState.children = node.children.map((child, index) => 
-        initNode(child, depth + 1, nodeWithState.state.path)
-      );
-    }
-    return nodeWithState;
-  };
-  return initNode(result.root);
-}
+
+
 
 interface NodeContextMenuProps {
   node: INode | null;
@@ -881,10 +849,9 @@ const NodeContextMenu: React.FC<NodeContextMenuProps> = ({ node, position, onClo
 
 const MindmapPlayground: React.FC<PlaygroundOptions> = ({ controls }) => {
   const [currentData, setCurrentData] = useState<INode>(() => {
-    const data = getMarkdownData(systemDesignMarkdown);
-    initializePayload(data);
-    return data;
+    return transformer.getMarkdownData(systemDesignMarkdown);
   });
+
   const [contextMenu, setContextMenu] = useState<{
     node: INode | null;
     position: { x: number; y: number } | null;
@@ -949,9 +916,9 @@ const MindmapPlayground: React.FC<PlaygroundOptions> = ({ controls }) => {
   const handleMindmapChange = (selectedId: string) => {
     const selected = MINDMAPS.find(m => m.id === selectedId);
     if (selected) {
-      const data = getMarkdownData(selected.content);
-      initializePayload(data);
-      setCurrentData(data);
+        const data = transformer.getMarkdownData(selected.content);
+        setCurrentData(data);
+
     }
   };
 

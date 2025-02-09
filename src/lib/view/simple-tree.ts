@@ -1,6 +1,6 @@
 // SimpleTree.ts
 import { select, zoom } from 'd3';
-import { Direction, IMarkmapOptions, IMarkmapState, INode } from './types';
+import { Direction, IMarkmapOptions, IMarkmapState, IEnhancedNode } from './types';
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { ToolBar } from '../../components/ToolBar';
@@ -29,7 +29,7 @@ export class SimpleTree {
   public options: Required<IMarkmapOptions>;
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
-  private currentData: INode | null = null;
+  private currentData: IEnhancedNode | null = null;
   private toolbarContainer: HTMLDivElement | null = null;
   private toolbarRoot: ReactDOM.Root | null = null;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
@@ -102,7 +102,7 @@ export class SimpleTree {
   }
 
   setCustomNodeHandler(
-    handler: (node: INode, event: React.MouseEvent) => void,
+    handler: (node: IEnhancedNode, event: React.MouseEvent) => void,
   ) {
     this.renderer.setCustomNodeHandler(handler);
   }
@@ -111,7 +111,7 @@ export class SimpleTree {
     this.renderer.detachNodeEventListeners();
   }
 
-  setData(data: INode) {
+  setData(data: IEnhancedNode) {
     this.stateManager.setData(data);
   }
 
@@ -144,16 +144,15 @@ export class SimpleTree {
   }
 
   public fitView() {
-    if (!this.currentData) return;
     this.renderer.fitView();
   }
 
-  public centerNode(node: INode | null): void {
+  public centerNode(node: IEnhancedNode | null): void {
     if (!node) return;
     this.renderer.centerNode(node);
   }
 
-  public ensureVisible(node: INode): void {
+  public ensureVisible(node: IEnhancedNode): void {
     this.renderer.ensureVisible(node);
   }
 
@@ -161,7 +160,7 @@ export class SimpleTree {
     this.renderer.rescale(scale);
   }
 
-  render(data: INode) {
+  render(data: IEnhancedNode) {
     this.setData(data);
     this.renderer.render();
   }
@@ -179,8 +178,8 @@ export class SimpleTree {
     this.toolbarContainer?.remove();
   }
 
-  public findNode(predicate: (node: INode) => boolean): INode | null {
-    const search = (node: INode): INode | null => {
+  public findNode(predicate: (node: IEnhancedNode) => boolean): IEnhancedNode | null {
+    const search = (node: IEnhancedNode): IEnhancedNode | null => {
       if (predicate(node)) return node;
       if (node.children) {
         for (const child of node.children) {
@@ -194,15 +193,15 @@ export class SimpleTree {
     return this.currentData ? search(this.currentData) : null;
   }
 
-  public findElement(node: INode): SVGGElement | null {
+  public findElement(node: IEnhancedNode): SVGGElement | null {
     return this.renderer.findElement(node);
   }
 
-  public create(parentNode: INode, content: string, position?: number): INode {
+  public create(parentNode: IEnhancedNode, content: string, position?: number): IEnhancedNode {
     return this.treeOperations.create(parentNode, content, position);
   }
 
-  public setSelected(node: INode | null) {
+  public setSelected(node: IEnhancedNode | null) {
     this.treeOperations.setSelected(node);
   }
 
@@ -210,7 +209,7 @@ export class SimpleTree {
     this.renderer.updateHighlight();
   }
 
-  toggleNode(node: INode, recursive: boolean = false): void {
+  toggleNode(node: IEnhancedNode, recursive: boolean = false): void {
     this.renderer.toggleNode(node, recursive);
     this.renderer.render();
   }

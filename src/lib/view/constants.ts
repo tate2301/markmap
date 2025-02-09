@@ -1,6 +1,6 @@
 import { scaleOrdinal, schemeCategory10 } from 'd3';
 import { Direction, type IMarkmapOptions } from './types';
-import { INode } from '../../common';
+import { INodeWithoutState } from '../../common';
 
 export const isMacintosh = navigator.platform.indexOf('Mac') > -1;
 
@@ -8,7 +8,7 @@ export const defaultColorFn = scaleOrdinal(schemeCategory10);
 
 export const lineWidthFactory =
   (baseWidth = 1, deltaWidth: number = 3, k: number = 2) =>
-  (node: INode) =>
+  (node: INodeWithoutState) =>
     baseWidth + deltaWidth / k ** (node.state?.depth || 0);
 
 export const defaultOptions: Required<IMarkmapOptions> = {

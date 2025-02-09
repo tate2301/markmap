@@ -6,7 +6,7 @@ import {
 } from './node-handler';
 import { TreeStateManager } from './state-manager';
 import { treeStyles } from '../tree-styles';
-import { Direction, FlexTreeNode, INode, Rect, BoundingBox } from '../types';
+import { Direction, FlexTreeNode, IEnhancedNode, Rect, BoundingBox } from '../types';
 import { initializeNode, MindMapUtils } from './utils';
 import { createElement } from 'react';
 import flextree from '../d3-flextree';
@@ -20,7 +20,7 @@ export class SimpleTreeRenderer {
   private g: d3.Selection<any, any, any, any>;
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
-  private spatialIndex: d3.Quadtree<d3.HierarchyNode<INode>> | null = null;
+  private spatialIndex: d3.Quadtree<d3.HierarchyNode<IEnhancedNode>> | null = null;
   private styleNode: d3.Selection<SVGStyleElement, unknown, null, undefined>;
   private nodeHandler: INodeHandler;
   private nodeRoots: Map<string, ReturnType<typeof createRoot>> = new Map();
@@ -112,8 +112,8 @@ export class SimpleTreeRenderer {
     this.styleNode.text(this.getStyleContent());
   }
 
-  createNode(parentNode: INode, content: string, position?: number): INode {
-    const newNode: INode = {
+  createNode(parentNode: IEnhancedNode, content: string, position?: number): IEnhancedNode {
+    const newNode: IEnhancedNode = {
       content,
       children: [],
       payload: { fold: 0 },
@@ -149,11 +149,11 @@ export class SimpleTreeRenderer {
     return newNode;
   }
 
-  updateFolds(node: INode) {
+  updateFolds(node: IEnhancedNode) {
     this.render()
   }
 
-  private renderElement = (node: INode, transform: string, animate: boolean = true) => {
+  private renderElement = (node: IEnhancedNode, transform: string, animate: boolean = true) => {
     const options = this.stateManager.getOptions()
     return createElement(NodeWrapper, {
       key: node.state.key,
@@ -166,7 +166,7 @@ export class SimpleTreeRenderer {
     })
   }
 
-  private handleNodeSizeChange = (node: INode, width: number, height: number) => {
+  private handleNodeSizeChange = (node: IEnhancedNode, width: number, height: number) => {
     const nodeKey = node.state.key;
     const prevSize = this.nodeSizes.get(nodeKey);
     
@@ -314,7 +314,7 @@ export class SimpleTreeRenderer {
     return (movedSourceX || movedSourceY || movedTargetX || movedTargetY);
   }
 
-  private computeNodeRectWithSize(node: INode)  {
+  private computeNodeRectWithSize(node: IEnhancedNode)  {
     const size = this.nodeSizes.get(node.state.key) ?? { width: 0, height: 0 };
     
     return MindMapUtils.computeRectWithSize(node.state.rect, [size.width, size.height]);
@@ -351,17 +351,17 @@ export class SimpleTreeRenderer {
 
 
 
-  private updateSpatialIndex(nodes: d3.HierarchyNode<INode>[]): void {
-    this.spatialIndex = d3.quadtree<d3.HierarchyNode<INode>>()
+  private updateSpatialIndex(nodes: d3.HierarchyNode<IEnhancedNode>[]): void {
+    this.spatialIndex = d3.quadtree<d3.HierarchyNode<IEnhancedNode>>()
       .x(d => d.data.state.rect.x)
       .y(d => d.data.state.rect.y)
       .addAll(nodes);
   }
 
-  private findVisibleNodes(viewport: { x: number; y: number; width: number; height: number }): d3.HierarchyNode<INode>[] {
+  private findVisibleNodes(viewport: { x: number; y: number; width: number; height: number }): d3.HierarchyNode<IEnhancedNode>[] {
     if (!this.spatialIndex) return [];
 
-    const visibleNodes: d3.HierarchyNode<INode>[] = [];
+    const visibleNodes: d3.HierarchyNode<IEnhancedNode>[] = [];
     this.spatialIndex.visit((node, x0, y0, x1, y1) => {
       // Early exit if quadtree node is outside viewport
       if (x1 < viewport.x || x0 > viewport.x + viewport.width || 
@@ -389,7 +389,7 @@ export class SimpleTreeRenderer {
     return visibleNodes;
   }
 
-  private isNodeVisible(node: d3.HierarchyNode<INode>): boolean {
+  private isNodeVisible(node: d3.HierarchyNode<IEnhancedNode>): boolean {
     if (!this.currentViewport) return true;
     return this.findVisibleNodes(this.currentViewport).some(n => n === node);
   }
@@ -422,7 +422,7 @@ export class SimpleTreeRenderer {
     this.updateVisibleElements(visibleNodes, visibleLinks);
   }
 
-  private updateVisibleElements(visibleNodes: d3.HierarchyNode<INode>[], visibleLinks: d3.HierarchyLink<INode>[]) {
+  private updateVisibleElements(visibleNodes: d3.HierarchyNode<IEnhancedNode>[], visibleLinks: d3.HierarchyLink<IEnhancedNode>[]) {
     // Update links first to ensure proper layering
     const linkContainers = this.g.selectAll('g.link-container')
       .data(visibleLinks, (d: any) => `${d.source.data.state.key}-${d.target.data.state.key}`);
@@ -491,7 +491,7 @@ export class SimpleTreeRenderer {
     });
   }
 
-  private buildTree(data: INode) {
+  private buildTree(data: IEnhancedNode) {
     const options = this.stateManager.getOptions();
     return flextree({
       direction: options.direction,
@@ -506,7 +506,7 @@ export class SimpleTreeRenderer {
     });
   }
 
-  private updateNodeElement(node: d3.HierarchyNode<INode>, element: Element | null) {
+  private updateNodeElement(node: d3.HierarchyNode<IEnhancedNode>, element: Element | null) {
     if(!element) return
     const transform = `translate(${node.data.state.rect.x},${node.data.state.rect.y})`;
     let root = this.nodeRoots.get(node.data.state.key);
@@ -704,20 +704,50 @@ export class SimpleTreeRenderer {
     const bounds = this.g.node()?.getBBox();
     if (!bounds) return;
 
-    const width = this.svg.node()?.clientWidth || 800;
-    const height = this.svg.node()?.clientHeight || 600;
+    const svgNode = this.svg.node();
+    if (!svgNode) return;
 
-    const scale = Math.min(width / bounds.width, height / bounds.height) * 0.9; // 90% fit
-    const centerX = width / 2 - (bounds.x + bounds.width / 2) * scale;
-    const centerY = height / 2 - (bounds.y + bounds.height / 2) * scale;
+    const width = svgNode.clientWidth || 800;
+    const height = svgNode.clientHeight || 600;
+    
+    // Add padding for better visual appearance (10% of the container size)
+    const padding = {
+        horizontal: width * 0.1,
+        vertical: height * 0.1
+    };
+    
+    // Calculate available space considering padding
+    const availableWidth = width - (padding.horizontal * 2);
+    const availableHeight = height - (padding.vertical * 2);
 
+    // Calculate scale to fit 90% of the available space
+    const scale = Math.min(
+        availableWidth / bounds.width,
+        availableHeight / bounds.height
+    ) * 0.9; // 90% of the calculated scale for some breathing room
+
+    // Calculate translation to center the entire tree content
+    const centerX = (width - bounds.width * scale) / 2 - bounds.x * scale;
+    const centerY = (height - bounds.height * scale) / 2 - bounds.y * scale;
+
+    // Create and apply the transform
+    const transform = d3.zoomIdentity
+        .translate(centerX, centerY)
+        .scale(scale);
+
+    // Update current transform
+    this.currentTransform = transform;
+
+    // Apply the transform with transition
     this.svg
-      .transition()
-      .duration(750)
-      .call(
-        this.zoom.transform,
-        d3.zoomIdentity.translate(centerX, centerY).scale(scale)
-      );
+        .transition()
+        .duration(750)
+        .call(this.zoom.transform, transform)
+        .on('end', () => {
+            this.updateViewport();
+            this.render();
+        });
+
   }
 
   resetView(): void {
@@ -750,7 +780,7 @@ export class SimpleTreeRenderer {
     this.svg.transition().duration(300).call(this.zoom.transform, transform);
   }
 
-  public centerNode(node: INode): void {
+  public centerNode(node: IEnhancedNode): void {
     const nodeElement = this.findElement(node);
     if (!nodeElement) return;
 
@@ -775,7 +805,7 @@ export class SimpleTreeRenderer {
       );
   }
 
-  public ensureVisible(node: INode): void {
+  public ensureVisible(node: IEnhancedNode): void {
     const nodeElement = this.findElement(node);
     if (!nodeElement) return;
 
@@ -808,7 +838,7 @@ export class SimpleTreeRenderer {
     }
   }
 
-  public findElement(node: INode): SVGGElement | null {
+  public findElement(node: IEnhancedNode): SVGGElement | null {
     const nodeElements = this.g.selectAll('g.node-wrapper');
     let matchingElement: SVGGElement | null = null;
 
@@ -835,14 +865,14 @@ export class SimpleTreeRenderer {
     );
   }
 
-  async toggleNode(node: INode, recursive: boolean): Promise<void> {
+  async toggleNode(node: IEnhancedNode, recursive: boolean): Promise<void> {
     const data = this.stateManager.getData();
     if (!data) return;
 
     // Use MindMapUtils.findNode to search through the entire tree
     const newNode = MindMapUtils.findNode(
       data,
-      (n: INode) => n.state.key === node.state.key,
+      (n: IEnhancedNode) => n.state.key === node.state.key,
     );
     if (!newNode) return;
 
@@ -856,7 +886,7 @@ export class SimpleTreeRenderer {
     // this.render(); // Add this to ensure the view updates
   }
 
-  private toggleRecursive(node: INode, isParent?: boolean): void {
+  private toggleRecursive(node: IEnhancedNode, isParent?: boolean): void {
     if (!node.payload) node.payload = { fold: 0 };
     node.payload.fold = node.payload.fold ? 0 : 1;
 
@@ -871,7 +901,7 @@ export class SimpleTreeRenderer {
   }
 
   setCustomNodeHandler(
-    handler: (node: INode, event: React.MouseEvent) => void,
+    handler: (node: IEnhancedNode, event: React.MouseEvent) => void,
   ) {
     if (this.nodeHandler instanceof MindMapNodeHandler) {
       this.nodeHandler.setCustomHandler(handler);

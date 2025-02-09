@@ -1,4 +1,4 @@
-import { INode as IBaseNode } from '../../common';
+import { INodeWithoutState as IBaseNode } from '../../common';
 
 export enum Direction {
   LR = 'LR',
@@ -35,18 +35,18 @@ export interface INodeState {
   shouldAnimate?: boolean
 }
 
-export interface INode extends IBaseNode {
+export interface IEnhancedNode extends IBaseNode {
   direction?: Direction;
   state: INodeState;
   content: string;
-  children: INode[];
-  parent?: INode;
+  children: IEnhancedNode[];
+  parent?: IEnhancedNode;
 }
 
 export interface IMarkmapState {
   id?: string;
-  data?: INode;
-  highlight?: INode;
+  data?: IEnhancedNode;
+  highlight?: IEnhancedNode;
   rect?: {
     x1: number;
     x2: number;
@@ -84,9 +84,9 @@ export interface IPadding {
   bottom: number;
 }
 
-export type ID3SVGElement = d3.Selection<SVGElement, INode, HTMLElement, INode>;
+export type ID3SVGElement = d3.Selection<SVGElement, IEnhancedNode, HTMLElement, IEnhancedNode>;
 
-export interface FlexTreeNode extends d3.HierarchyNode<INode> {
+export interface FlexTreeNode extends d3.HierarchyNode<IEnhancedNode> {
   x: number;
   y: number;
   xSize: number;
@@ -112,27 +112,27 @@ export interface IFlexTreeBaseOptions {
 }
 
 export interface IFlexTreeOptions extends IFlexTreeBaseOptions {
-  children?: (data: INode) => INode[];
+  children?: (data: IEnhancedNode) => IEnhancedNode[];
   nodeSize?: (node: FlexTreeNode) => [number, number];
   spacing?: number | ((a: FlexTreeNode, b: FlexTreeNode) => number);
 }
 
 export interface IMarkmapFlexTreeOptions extends IFlexTreeBaseOptions {
   direction: Direction;
-  children: (d: INode) => INode[];
+  children: (d: IEnhancedNode) => IEnhancedNode[];
   nodeSize: (node: FlexTreeNode) => [number, number];
   spacing: (a: FlexTreeNode, b: FlexTreeNode) => number;
 }
 
 export interface IFlexTreeLayout {
   layout(root: FlexTreeNode): FlexTreeNode;
-  hierarchy(data: INode): FlexTreeNode;
+  hierarchy(data: IEnhancedNode): FlexTreeNode;
 }
 
 export interface IMarkmapOptions extends SimpleTreeOptions {
   id: string;
   autoFit: boolean;
-  color: (node: INode) => string;
+  color: (node: IEnhancedNode) => string;
   duration: number;
   embedGlobalCSS: boolean;
   fitRatio: number;
@@ -147,7 +147,7 @@ export interface IMarkmapOptions extends SimpleTreeOptions {
   spacingHorizontal: number;
   spacingVertical: number;
   initialExpandLevel: number;
-  lineWidth: (node: INode) => number;
+  lineWidth: (node: IEnhancedNode) => number;
   toggleRecursively: boolean;
   layoutDirection: Direction;
 }
@@ -161,4 +161,32 @@ export interface SimpleTreeOptions {
   levelSpacing?: number;
   siblingSpacing?: number; // Default: 8px
   showToolbar?: boolean;
+}
+
+export interface MindmapConfig {
+  initialDirection?: Direction;
+  width?: number;
+  height?: number;
+  backgroundColor?: string;
+  controls?: {
+    show?: boolean;
+    position?: {
+      top?: string;
+      right?: string;
+      bottom?: string;
+      left?: string;
+    };
+    showDirectionControl?: boolean;
+    showDataControl?: boolean;
+  };
+}
+
+export interface MindmapProps {
+  data: IEnhancedNode;
+  config?: MindmapConfig;
+  onNodeClick?: (node: IEnhancedNode, e: React.MouseEvent) => void;
+  onNodeShiftClick?: (node: IEnhancedNode) => void;
+  onDirectionChange?: (direction: Direction) => void;
+  className?: string;
+  style?: React.CSSProperties;
 }

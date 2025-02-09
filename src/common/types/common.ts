@@ -24,12 +24,12 @@ export interface IPureNode {
   children: IPureNode[];
 }
 
-export interface INode extends IPureNode {
+export interface INodeWithoutState extends IPureNode {
   /**
    * Store temporary data that helps rendering.
    */
   state: INodeState;
-  children: INode[];
+  children: INodeWithoutState[];
 }
 
 export interface INodeState {

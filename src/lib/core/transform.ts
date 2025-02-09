@@ -1,5 +1,5 @@
 import type MarkdownIt from 'markdown-it';
-import { CSSItem, IPureNode, JSItem, UrlBuilder } from '../../common';
+import { CSSItem, IPureNode, JSItem, UrlBuilder, INodeWithoutState } from '../../common';
 import { IHtmlParserOptions, buildTree } from '../../parser';
 import { initializeMarkdownIt } from './markdown-it';
 import { plugins as availablePlugins, createTransformHooks } from './plugins';
@@ -13,6 +13,7 @@ import {
   ITransformer,
 } from './types';
 import { patchCSSItem, patchJSItem } from './util';
+import { IEnhancedNode } from '../view';
 
 export const builtInPlugins =  availablePlugins;
 
@@ -119,5 +120,44 @@ export class Transformer implements ITransformer {
       .map((plugin) => plugin.name)
       .filter((name) => features[name]);
     return this.getAssets(keys);
+  }
+
+  /**
+   * Transforms markdown content and initializes payload
+   */
+  getMarkdownData(markdown: string): IEnhancedNode {
+    const result = this.transform(markdown);
+    let nextId = 1;
+    
+    const initNode = (node: IPureNode, depth = 0, path = ''): INodeWithoutState => {
+      const id = nextId++;
+      const nodeWithState = {
+        ...node,
+        state: {
+          key: id.toString(),
+          id,
+          depth,
+          path: path ? `${path}.${id}` : id.toString(),
+          size: [280, 0] as [number, number],
+          rect: { x: 0, y: 0, width: 0, height: 0 },
+          shouldAnimate: true
+        }
+      } as IEnhancedNode;
+      
+      if (node.children) {
+        nodeWithState.children = node.children.map((child, index) => 
+          initNode(child, depth + 1, nodeWithState.state?.path)
+        );
+      }
+      
+      // Initialize payload if not present
+      if (!nodeWithState.payload) {
+        nodeWithState.payload = { fold: 0 };
+      }
+      
+      return nodeWithState;
+    };
+    
+    return initNode(result.root);
   }
 }

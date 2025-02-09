@@ -1,4 +1,4 @@
-import { Direction, INode, Rect } from '../types';
+import { Direction, IEnhancedNode, Rect } from '../types';
 
 export interface IPureNode {
   content: string;
@@ -13,15 +13,15 @@ export interface IPadding {
 }
 
 interface IMindMapTreeUtils {
-  convertPureNode: (pure: IPureNode) => INode;
+  convertPureNode: (pure: IPureNode) => IEnhancedNode;
 }
 
 function initializeNode(
-  node: INode,
+  node: IEnhancedNode,
   depth = 0,
   parentDirection?: Direction,
-  parentNode?: INode,
-): INode {
+  parentNode?: IEnhancedNode,
+): IEnhancedNode {
   // Initialize state if it doesn't exist
   node.state = {
     depth,
@@ -68,7 +68,7 @@ class MindMapUtils implements IMindMapTreeUtils {
   /**
    * convertPureNode: Converts legacy IPureNode data into the INode format expected by SimpleTree.
    */
-  convertPureNode(pure: IPureNode): INode {
+  convertPureNode(pure: IPureNode): IEnhancedNode {
     return {
       content: pure.content,
       payload: {
@@ -94,10 +94,10 @@ class MindMapUtils implements IMindMapTreeUtils {
   }
 
   static findNode(
-    data: INode,
-    predicate: (node: INode) => boolean,
-  ): INode | null {
-    const search = (node: INode): INode | null => {
+    data: IEnhancedNode,
+    predicate: (node: IEnhancedNode) => boolean,
+  ): IEnhancedNode | null {
+    const search = (node: IEnhancedNode): IEnhancedNode | null => {
       if (predicate(node)) return node;
       if (node.children) {
         for (const child of node.children) {

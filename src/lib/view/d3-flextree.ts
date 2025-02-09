@@ -1,6 +1,6 @@
 import { hierarchy } from 'd3-hierarchy';
 import {
-  INode,
+  IEnhancedNode,
   FlexTreeNode,
   IFlexTreeOptions,
   Direction,
@@ -29,8 +29,8 @@ class FlexTreeLayout implements IFlexTreeLayout {
     this.layoutStrategy = getLayoutStrategy(this.options.direction ?? Direction.LR);
   }
 
-  hierarchy(data: INode): FlexTreeNode {
-    const childrenAccessor = (node: INode) => {
+  hierarchy(data: IEnhancedNode): FlexTreeNode {
+    const childrenAccessor = (node: IEnhancedNode) => {
       if (node.payload?.fold === 1) return [];
       return this.options.children ? this.options.children(node) : [];
     };
