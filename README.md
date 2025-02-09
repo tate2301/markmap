@@ -8,11 +8,20 @@
 
 ## Installation
 
-## Getting Started
+```bash
+npm install markmap-react
+# or
+yarn add markmap-react
+# or
+pnpm add markmap-react
+```
 
-To get the markdown data, you can you use the transformer like this
-```ts
-import {Transformer} from "markmap-react"
+## Basic Usage
+
+Transform your markdown into mindmap data:
+
+```typescript
+import { Transformer } from "markmap-react"
 
 const markdown = `
 - Root
@@ -27,68 +36,126 @@ const transformer = new Transformer()
 const markdownData = transformer.getMarkdownData(markdown)
 ```
 
-You can initialize the Transformer with custom markdown plugins, for example:
+## Component Usage
 
-```ts
-const transformer = new Transformer([
-    {
-        name: 'custom',
-        transform: () => {
-        return {
-            styles: [
-                {
-                    type: 'style',
-                    data: `
-                    .node-wrapper { 
-                        display: inline-flex; 
-                        padding: 4px 8px; 
-                        border-radius: 6px; 
-                        transition: all 0.2s ease; 
-                    }`,
-                },
-            ],
-            scripts: [],
-            };
-        },
-    },
-]);
-```
+### Basic Component Setup
 
-To render the mindmap in your app
-
-```tsx
-const config: MindmapConfig = {
-    initialDirection: Direction.LR,
-    controls: {
-        show: controls,
-        showDataControl: false,
-    },
-};
+```typescript
+import { Mindmap, Direction, MindmapConfig } from 'markmap-react'
 
 const MyMindmap = () => {
-    const [currentData, setCurrentData] = useState<INode>(() => {
-        return transformer.getMarkdownData(systemDesignMarkdown);
-    });
+  const config: MindmapConfig = {
+    initialDirection: Direction.LR,
+    controls: {
+      show: true,
+      showDataControl: false,
+    },
+  };
 
-    const handleNodeClick = (node: INode, event: React.MouseEvent) => {
-        event.preventDefault();
-        event.stopPropagation();
+  const handleNodeClick = (node: INode, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log({x: event.clientX, y: event.clientY})
+  };
 
-        // if you want to show a menu you can extract the co-ordinates
-        console.log({x: event.clientX, y: event.clientY})
-        
-    };
-    
-
-    return (
-        <div style={{width: '100%', height: '100%'}}>
-            <Mindmap 
-                data={currentData} 
-                config={config} 
-                onNodeClick={handleNodeClick}
-            />
-        </div>
-    )
+  return (
+    <div style={{width: '100%', height: '100%'}}>
+      <Mindmap 
+        data={currentData} 
+        config={config} 
+        onNodeClick={handleNodeClick}
+      />
+    </div>
+  )
 }
-
 ```
+
+### Configuration Options
+
+The Mindmap component accepts a configuration object with the following options:
+
+```typescript
+interface MindmapConfig {
+  initialDirection: Direction;
+  backgroundColor?: string;
+  controls?: {
+    show?: boolean;
+    position?: {
+      top?: string;
+      right?: string;
+      bottom?: string;
+      left?: string;
+    };
+    showDirectionControl?: boolean;
+    showDataControl?: boolean;
+  };
+}
+```
+
+### Default Configuration
+```typescript
+const defaultConfig: MindmapConfig = {
+  initialDirection: Direction.LR,
+  backgroundColor: '#f5f5f5',
+  controls: {
+    show: true,
+    position: {
+      top: '20px',
+      right: '20px',
+    },
+    showDirectionControl: true,
+    showDataControl: true,
+  },
+};
+```
+
+### Playground Example
+For a more advanced implementation with dynamic data loading and context menus:
+
+```typescript
+const MindmapPlayground = ({ controls }) => {
+  const config: MindmapConfig = {
+    initialDirection: Direction.LR,
+    controls: {
+      show: controls,
+      showDataControl: false,
+    },
+  };
+
+  return (
+    <div style={{ width: '100%', height: '100%' }}>
+      <Mindmap 
+        data={currentData} 
+        config={config} 
+        onNodeClick={handleNodeClick}
+      />
+      {/* Additional controls can be added here */}
+    </div>
+  );
+};
+```
+
+### Custom Styling
+You can customize the appearance using the transformer with custom styles:
+
+```typescript
+const transformer = new Transformer([
+  {
+    name: 'custom',
+    transform: () => ({
+      styles: [
+        {
+          type: 'style',
+          data: `
+          .node-wrapper { 
+            display: inline-flex; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            transition: all 0.2s ease; 
+          }`,
+        },
+      ],
+      scripts: [],
+    }),
+  },
+]);

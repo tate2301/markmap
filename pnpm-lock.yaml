@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  markmap-react: 'link:'
+
 importers:
 
   .:
@@ -62,6 +65,9 @@ importers:
       markdown-it-sup:
         specifier: ^2.0.0
         version: 2.0.0
+      markmap-react:
+        specifier: 'link:'
+        version: 'link:'
       prismjs:
         specifier: ^1.29.0
         version: 1.29.0
