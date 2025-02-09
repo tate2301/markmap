@@ -41,117 +41,571 @@ const designSystemsMarkdown = `
 
 ## Foundations
 ### Color Palette
-- Primary/secondary colors
-  - Primary colors establish brand identity and guide user attention. The selection of primary colors is crucial as they form the foundation of your visual language. These colors should reflect your brand personality while ensuring they work harmoniously across different mediums and contexts. Consider how these colors will appear in both digital and print formats, and how they might need to be adjusted for different background colors or lighting conditions.
-  - Secondary colors support primary colors and provide visual hierarchy. They offer flexibility and depth to your design system, allowing for more nuanced visual communication. Secondary colors should complement your primary palette while providing enough contrast to create distinct visual elements. They're particularly useful for creating subtle variations in UI components, backgrounds, and decorative elements.
-  - Consider cultural color meanings and emotional impact. Colors carry different meanings across cultures and can evoke specific emotional responses. For example, while red might signify luck and prosperity in Chinese culture, it could represent danger or warning in Western contexts. Understanding these cultural nuances is crucial for creating globally accessible design systems that resonate positively with diverse user bases.
-- Semantic colors (success, warning, error)
-  - Green for success: Indicates completed actions and positive states. The use of green should be consistent across the interface to build user trust and recognition. Consider using different shades of green for various success states, ensuring each variation maintains sufficient contrast while clearly communicating positive feedback. The success state should be immediately recognizable but not overwhelming, striking a balance between visibility and subtlety.
-  - Yellow/Orange for warning: Alerts users to potential issues. Warning colors should be distinct from both success and error states, creating a clear hierarchy of importance. These colors need to be noticeable enough to draw attention but not so alarming that they cause unnecessary anxiety. Consider using softer shades for less critical warnings and more vibrant ones for time-sensitive alerts.
-  - Red for error: Highlights critical problems requiring attention. Error states should be immediately noticeable but not panic-inducing. The red used should be bold enough to command attention while maintaining readability when combined with error messages. Consider implementing different intensities of red for various error severities, ensuring each level is distinguishable while maintaining a cohesive error feedback system.
+#### Color Theory
+- Basic Principles
+  - Color Wheel Relationships
+    - Complementary Pairs
+    - Analogous Groups
+    - Triadic Combinations
+  - Color Properties
+    - Hue Variations
+    - Saturation Levels
+    - Brightness Control
+  - Psychological Impact
+    - Cultural Associations
+    - Emotional Responses
+    - Brand Perception
+- Advanced Concepts
+  - Color Spaces
+    - RGB Color Model
+      - Digital Applications
+      - Screen Rendering
+    - CMYK Color Model
+      - Print Production
+      - Material Considerations
+    - HSL/HSV Models
+      - User Interface Design
+      - Color Picking Tools
+  - Color Harmony
+    - Balance Principles
+    - Visual Weight
+    - Spatial Distribution
+
+#### Color Systems
+- Brand Colors
+  - Primary Palette
+    - Main Brand Color
+      - Usage Guidelines
+      - Variation Rules
+    - Supporting Colors
+      - Combination Rules
+      - Context Guidelines
+    - Accent Colors
+      - Highlight Usage
+      - Interactive States
+  - Extended Palette
+    - Neutral Colors
+      - Background Uses
+      - Text Applications
+    - Gradients
+      - Direction Rules
+      - Opacity Guidelines
+- Functional Colors
+  - Status Colors
+    - Success States
+      - Positive Feedback
+      - Completion Indicators
+    - Warning States
+      - Alert Levels
+      - Caution Indicators
+    - Error States
+      - Critical Alerts
+      - Failure Indicators
+  - Interactive Colors
+    - Link States
+      - Default State
+      - Hover Effects
+      - Active State
+    - Button States
+      - Primary Actions
+      - Secondary Actions
+      - Disabled State
+
+#### Color Management
+- Technical Implementation
+  - Color Variables
+    - Token Structure
+    - Naming Conventions
+  - Color Functions
+    - Manipulation Methods
+    - Calculation Tools
+  - Platform Support
+    - Browser Compatibility
+    - Device Considerations
+- Accessibility Standards
+  - Contrast Requirements
+    - WCAG Guidelines
+      - AA Compliance
+      - AAA Compliance
+    - Testing Methods
+      - Automated Checks
+      - Manual Verification
+  - Color Blindness
+    - Deuteranopia Support
+    - Protanopia Support
+    - Tritanopia Support
+- Documentation
+  - Usage Guidelines
+    - Implementation Rules
+    - Best Practices
+  - Maintenance
+    - Version Control
+    - Update Procedures
 
 ### Typography
-- Type scale hierarchy
-  - Follow modular scale for consistent visual rhythm. A modular scale creates mathematical harmony in your typography, making it easier to maintain consistency across different screen sizes and contexts. The scale should be carefully chosen to provide enough distinction between different text levels while maintaining a cohesive visual language. Consider how the scale will work across different languages and character sets.
-  - Common ratios: 1.2 (minor third) or 1.5 (perfect fifth). These ratios have been proven effective in creating harmonious typography hierarchies. The minor third (1.2) provides subtle but noticeable size differences, making it suitable for dense information displays, while the perfect fifth (1.5) creates more dramatic contrast, useful for marketing and editorial content.
-  - Define clear heading levels (H1-H6) with distinct sizes. Each heading level should have a clear purpose and visual distinction. Consider not just size, but also weight, line height, and spacing to create clear hierarchical relationships. The differences between levels should be noticeable enough to convey structure while maintaining visual harmony.
+#### Typeface Management
+- Font Selection
+  - Primary Fonts
+    - Display Typography
+      - Header Styles
+      - Hero Text
+    - Body Typography
+      - Paragraph Text
+      - List Styles
+    - Monospace Fonts
+      - Code Blocks
+      - Technical Data
+  - Fallback Strategy
+    - System Fonts
+      - Platform Specifics
+      - Degradation Rules
+    - Web Fonts
+      - Loading Strategy
+      - Performance Impact
+- Font Loading
+  - Performance Optimization
+    - Preloading
+      - Critical Fonts
+      - Secondary Fonts
+    - Lazy Loading
+      - Threshold Rules
+      - Priority Settings
+  - Browser Support
+    - Rendering Issues
+      - Anti-aliasing
+      - Font Smoothing
+    - Compatibility
+      - Legacy Browsers
+      - Modern Features
+
+#### Typography Scale
+- Scale System
+  - Mathematical Ratios
+    - Golden Ratio (1.618)
+      - Visual Harmony
+      - Size Progression
+    - Perfect Fourth (1.333)
+      - Balanced Hierarchy
+      - Compact Layouts
+    - Custom Ratios
+      - Specific Needs
+      - Brand Requirements
+  - Implementation
+    - CSS Variables
+      - Scale Generation
+      - Responsive Adaptation
+    - Component Integration
+      - Consistent Usage
+      - Override Rules
+- Responsive Typography
+  - Breakpoint System
+    - Mobile Sizes
+      - Minimum Readability
+      - Touch Targets
+    - Desktop Sizes
+      - Reading Distance
+      - Screen Resolution
+  - Fluid Typography
+    - Calculation Methods
+      - Viewport Units
+      - Clamp Function
+    - Performance Impact
+      - Rendering Speed
+      - Layout Stability
+
+#### Text Styles
+- Hierarchy System
+  - Headings
+    - Size Progression
+      - Visual Weight
+      - Spacing Rules
+    - Semantic Structure
+      - HTML Mapping
+      - Accessibility
+  - Body Text
+    - Paragraph Styles
+      - Line Height
+      - Margin Rules
+    - List Formatting
+      - Bullet Styles
+      - Spacing Rules
+- Special Formats
+  - Emphasis
+    - Bold Text
+      - Weight Selection
+      - Usage Rules
+    - Italic Text
+      - Style Guidelines
+      - Cultural Considerations
+  - Links
+    - State Styles
+      - Default Look
+      - Hover Effects
+    - Accessibility
+      - Focus States
+      - Color Contrast
+
+#### Typography Tools
+- Development Tools
+  - CSS Utilities
+    - Mixins
+      - Common Patterns
+      - Customization
+    - Functions
+      - Calculations
+      - Conversions
+  - Testing Tools
+    - Visual Regression
+      - Snapshot Testing
+      - Comparison Tools
+    - Performance Testing
+      - Loading Metrics
+      - Rendering Speed
+- Documentation
+  - Style Guide
+    - Usage Examples
+      - Common Cases
+      - Edge Cases
+    - Implementation
+      - Code Snippets
+      - Best Practices
+  - Maintenance
+    - Version Control
+      - Change Tracking
+      - Update Process
+    - Quality Checks
+      - Automated Tests
+      - Manual Review
 
 ## Components
-### Base Components
-- Buttons (primary, secondary, ghost)
-  - Clear visual hierarchy between button types. The hierarchy should be immediately apparent through size, color, and prominence. Primary buttons should stand out as the main call-to-action, while secondary and ghost buttons provide alternative levels of emphasis. Consider how these buttons will appear in different contexts and ensure their hierarchy remains clear when multiple buttons are used together.
-  - Consistent padding and height across variants. Maintaining consistent dimensions helps create a polished, professional appearance and improves usability. The padding should be generous enough to create comfortable touch targets while maintaining visual balance. Consider how the padding might need to adjust for different button labels and icon combinations.
-  - Special considerations for button states. Loading states should provide clear feedback while maintaining button dimensions to prevent layout shifts. Disabled states should clearly indicate unavailability while preserving the button's role in the interface. Touch targets should be optimized for various devices and input methods.
-- Form elements (accessible labels, error states)
-  - Label positioning and alignment
-  - Clear error message placement
-  - Special considerations:
-    - Field validation timing
-    - Required field indicators
-    - Help text placement
+### Basic Elements
+#### Interactive Components
+- Buttons
+  - Primary Actions
+    - Default State
+      - Visual Style
+      - Size Options
+    - Hover State
+      - Animation
+      - Feedback
+    - Active State
+      - Press Effect
+      - Color Change
+  - Secondary Actions
+    - Ghost Buttons
+      - Border Style
+      - Background
+    - Text Buttons
+      - Typography
+      - Spacing
+  - State Management
+    - Loading State
+      - Spinner Design
+      - Disabled Input
+    - Disabled State
+      - Visual Cues
+      - Interaction Block
+- Links
+  - Text Links
+    - Inline Style
+      - Underline Rules
+      - Color System
+    - Block Links
+      - Card Links
+      - Navigation Items
+  - Interactive States
+    - Hover Effects
+      - Color Change
+      - Animation
+    - Focus States
+      - Outline Style
+      - Keyboard Nav
 
-### Composite Patterns
-- Data tables with sorting/filtering
-  - Column header interactions
-  - Filter UI patterns
-  - Special considerations:
-    - Empty states and loading indicators
-    - Responsive behavior on mobile
-    - Bulk action patterns
-- Complex form workflows
-  - Multi-step navigation
-  - Progress indicators
-  - Special considerations:
-    - Form state persistence
-    - Validation timing
-    - Error recovery patterns
+#### Form Elements
+- Input Fields
+  - Text Inputs
+    - Basic Input
+      - Border Style
+      - Padding Rules
+    - Textarea
+      - Resize Behavior
+      - Height Limits
+    - Search Input
+      - Icon Position
+      - Clear Button
+  - Select Inputs
+    - Dropdown Style
+      - Arrow Design
+      - Option List
+    - Multi-select
+      - Tag Design
+      - Clear All
+  - Specialized Inputs
+    - Date Picker
+      - Calendar UI
+      - Format Options
+    - Number Input
+      - Increment Controls
+      - Range Limits
+- Validation
+  - Error States
+    - Visual Indicators
+      - Border Color
+      - Icon Usage
+    - Error Messages
+      - Position Rules
+      - Animation
+  - Success States
+    - Confirmation
+      - Check Mark
+      - Message Style
+    - Data Format
+      - Validation Rules
+      - Format Display
+
+### Composite Elements
+#### Navigation Systems
+- Main Navigation
+  - Desktop Menu
+    - Horizontal Nav
+      - Item Spacing
+      - Dropdown Trigger
+    - Vertical Nav
+      - Collapsible Sections
+      - Icon Usage
+  - Mobile Menu
+    - Hamburger Menu
+      - Icon Animation
+      - Panel Slide
+    - Bottom Navigation
+      - Icon Design
+      - Label Position
+- Secondary Navigation
+  - Breadcrumbs
+    - Separator Style
+      - Icon Choice
+      - Spacing Rules
+    - Truncation
+      - Responsive Rules
+      - Tooltip Usage
+  - Pagination
+    - Number Display
+      - Active State
+      - Range Limits
+    - Navigation Controls
+      - Arrow Design
+      - Disabled States
+
+#### Content Containers
+- Cards
+  - Basic Layout
+    - Header Design
+      - Title Style
+      - Action Items
+    - Content Area
+      - Image Handling
+      - Text Flow
+  - Interactive States
+    - Hover Effect
+      - Shadow Change
+      - Scale Transform
+    - Click Action
+      - Feedback
+      - Navigation
+- Modals
+  - Structure
+    - Header Section
+      - Title Style
+      - Close Button
+    - Content Area
+      - Scroll Behavior
+      - Padding Rules
+  - Behavior
+    - Open Animation
+      - Timing
+      - Effect Style
+    - Focus Management
+      - Trap Focus
+      - Return Focus
 
 ## Documentation
-### Usage Guidelines
-- Do's and Don'ts with visual examples
-  - Clear examples of correct implementation
-  - Common anti-patterns to avoid
-  - Special considerations:
-    - Accessibility requirements
-    - Performance implications
-    - Browser compatibility
-- Content writing standards
-  - Voice and tone guidelines
-  - UI text patterns
-  - Special considerations:
-    - Localization requirements
-    - Character length limits
-    - Reading level guidelines
+### Implementation Guide
+#### Setup Instructions
+- Environment Configuration
+  - Tool Requirements
+    - Build Process
+      - Testing Setup
+        - CI/CD Integration
+          - Deployment Rules
+            - Monitoring Setup
+              - Maintenance Guide
+                - Troubleshooting Steps
+                  - Support Protocols: Establish comprehensive support protocols for implementation issues. Include specific procedures for issue triage, escalation paths, and resolution tracking.
+
+#### API Documentation
+- Method Descriptions
+  - Parameter Details
+    - Return Types
+      - Error Handling
+        - Example Usage
+          - Edge Cases
+            - Security Notes
+              - Version History
+                - Migration Guide
+                  - Breaking Changes: Document comprehensive details about breaking changes in the API. Include specific migration steps, code examples, and potential impact analysis for each change.
+
+### Style Guide
+#### Component Usage
+- Implementation Rules
+  - Best Practices
+    - Common Patterns
+      - Anti-patterns
+        - Code Examples
+          - Performance Tips
+            - Accessibility Guidelines
+              - Testing Strategies
+                - Documentation Standards
+                  - Maintenance Procedures: Define detailed procedures for maintaining component documentation. Include specific requirements for updating examples, validating code snippets, and reviewing documentation accuracy.
+
+#### Content Guidelines
+- Voice and Tone
+  - Writing Style
+    - Terminology Usage
+      - Localization Rules
+        - Character Limits
+          - Content Structure
+            - SEO Guidelines
+              - Accessibility Writing
+                - Review Process
+                  - Version Control: Establish comprehensive version control for content guidelines. Include specific procedures for reviewing changes, maintaining consistency, and tracking content versions.
 
 ### Design Tokens
-- JSON structure for cross-platform use
-  - Nested categorization
-  - Semantic naming conventions
-  - Special considerations:
-    - Platform-specific values
-    - Dark mode variants
-    - Legacy system support
-- Versioning strategy
-  - Semantic versioning rules
-  - Breaking change policies
-  - Special considerations:
-    - Deprecation process
-    - Migration guides
-    - Backward compatibility
+#### Token Structure
+- Naming Conventions
+  - Category Organization
+    - Value Formats
+      - Platform Support
+        - Theme Handling
+          - Version Control
+            - Build Process
+              - Documentation Rules
+                - Testing Requirements
+                  - Maintenance Strategy: Define detailed strategies for maintaining design tokens. Include specific procedures for updating tokens, validating changes, and ensuring consistency across platforms.
+
+#### Token Implementation
+- Framework Integration
+  - Build Tools
+    - Platform Support
+      - Theme Generation
+        - Version Management
+          - Testing Protocols
+            - Documentation Rules
+              - Migration Guides
+                - Performance Impact
+                  - Maintenance Procedures: Establish comprehensive procedures for maintaining token implementations. Include specific requirements for testing, validation, and documentation of token changes.
 
 ## Maintenance
-### Contribution Model
-- Component proposal process
-  - Needs assessment criteria
-  - Design review stages
-  - Special considerations:
-    - Impact analysis
-    - Implementation complexity
-    - Maintenance overhead
-- Governance board structure
-  - Role definitions
-  - Decision-making process
-  - Special considerations:
-    - Stakeholder representation
-    - Meeting cadence
-    - Documentation requirements
+### Version Control
+#### Release Strategy
+- Semantic Versioning
+  - Change Documentation
+    - Migration Planning
+      - Testing Protocol
+        - Rollback Process
+          - Monitoring Plan
+            - Support Strategy
+              - Update Protocol
+                - Security Checks
+                  - Performance Tests: Implement comprehensive performance testing for each release. Include specific metrics for load time, runtime performance, and resource usage across different environments and conditions.
+
+#### Change Management
+- Impact Analysis
+  - Review Process
+    - Approval Workflow
+      - Documentation Updates
+        - Testing Requirements
+          - Release Planning
+            - Communication Strategy
+              - Training Materials
+                - Monitoring Plan
+                  - Rollback Procedures: Establish detailed procedures for rolling back changes when necessary. Include specific steps for identifying rollback triggers, executing the rollback, and managing affected systems.
 
 ### Quality Assurance
-- Visual regression testing
-  - Screenshot comparison tools
-  - Cross-browser testing
-  - Special considerations:
-    - Test environment setup
-    - Baseline management
-    - False positive handling
-- Accessibility audits
-  - Automated testing tools
-  - Manual testing procedures
-  - Special considerations:
-    - WCAG compliance levels
-    - Screen reader testing
-    - Keyboard navigation
-`;
+#### Testing Strategy
+- Unit Testing
+  - Integration Testing
+    - End-to-End Testing
+      - Performance Testing
+        - Accessibility Testing
+          - Security Testing
+            - Compatibility Testing
+              - Documentation Testing
+                - Automation Strategy
+                  - Reporting Systems: Implement comprehensive testing report generation and analysis. Include specific metrics for test coverage, failure rates, and performance benchmarks across different test types.
+
+#### Monitoring Systems
+- Performance Metrics
+  - Error Tracking
+    - Usage Analytics
+      - Security Monitoring
+        - Accessibility Compliance
+          - Browser Compatibility
+            - Mobile Performance
+              - Server Metrics
+                - User Feedback
+                  - Improvement Planning: Establish detailed procedures for analyzing monitoring data and planning improvements. Include specific methods for identifying trends, prioritizing issues, and implementing solutions.
+
+### Security
+#### Authentication Systems
+- Access Control
+  - Permission Management
+    - Security Protocols
+      - Encryption Standards
+        - Audit Logging
+          - Threat Detection
+            - Incident Response
+              - Recovery Procedures
+                - Documentation Requirements
+                  - Compliance Monitoring: Implement comprehensive security compliance monitoring. Include specific checks for regulatory requirements, security standards, and internal policies.
+
+#### Data Protection
+- Encryption Methods
+  - Storage Security
+    - Transfer Protocols
+      - Access Controls
+        - Backup Systems
+          - Recovery Plans
+            - Audit Procedures
+              - Compliance Requirements
+                - Documentation Standards
+                  - Training Programs: Establish detailed security training programs for team members. Include specific modules for different security aspects, testing procedures, and certification requirements.
+
+## Maintenance
+### Version Control
+#### Release Strategy
+##### Semantic Versioning
+###### Change Documentation
+####### Migration Planning
+######## Testing Protocol
+######### Rollback Process
+########## Monitoring Plan
+########### Support Strategy
+############ Update Protocol
+############# Security Checks
+############## Performance Tests
+
+### Quality Assurance
+#### Testing Strategy
+##### Unit Tests
+###### Integration Tests
+####### E2E Testing
+######## Performance Tests
+######### Accessibility Tests
+########## Security Audits
+########### Compliance Checks
+############ Documentation Tests
+############# Automation Rules
+############## Reporting Systems`;
 
 // 2. UI Component Architecture
 const componentArchMarkdown = `
@@ -161,8 +615,8 @@ const componentArchMarkdown = `
 ### Atomic Design
 - Atoms: Basic HTML elements
   - Pure, stateless components form the foundation of your component library. These fundamental building blocks should be highly reusable and maintain consistent behavior across different contexts. Consider how these components will be styled, ensuring they can adapt to different themes while maintaining their core functionality. Documentation should clearly explain the component's purpose, props, and usage patterns.
-  - Maximum reusability requires careful consideration of component APIs. Props should be flexible enough to accommodate various use cases while maintaining clear defaults and validation. Consider how the component will behave in different contexts and ensure it remains accessible and performant across all implementations. The API design should follow consistent patterns across all atomic components.
-  - Special considerations include managing browser inconsistencies and maintaining accessibility standards. Each component should be thoroughly tested across different browsers and devices, with particular attention to focus management and keyboard navigation. Consider implementing ARIA attributes and roles appropriately, and ensure proper semantic HTML usage.
+    - Maximum reusability requires careful consideration of component APIs. Props should be flexible enough to accommodate various use cases while maintaining clear defaults and validation. Consider how the component will behave in different contexts and ensure it remains accessible and performant across all implementations. The API design should follow consistent patterns across all atomic components.
+    - Special considerations include managing browser inconsistencies and maintaining accessibility standards. Each component should be thoroughly tested across different browsers and devices, with particular attention to focus management and keyboard navigation. Consider implementing ARIA attributes and roles appropriately, and ensure proper semantic HTML usage.
 
 ## State Management
 ### Component States

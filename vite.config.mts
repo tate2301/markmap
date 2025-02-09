@@ -10,4 +10,18 @@ export default defineConfig({
       plugins: [tailwindcss()],
     },
   },
+  worker: {
+    format: 'es',
+    plugins: () => []
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'layout-worker': ['./src/lib/view/workers/layout.worker.ts']
+        }
+      }
+    }
+  }
 });

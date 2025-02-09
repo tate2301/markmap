@@ -30,8 +30,11 @@ export class SimpleTreeRenderer {
   private renderQueue: Set<string> = new Set(); // Track nodes that need updates
   private isRenderScheduled: boolean = false;
   private boundingBoxCache: Map<string, BoundingBox> = new Map();
+  private currentViewport: { x: number; y: number; width: number; height: number } | null = null;
+  private currentTransform: d3.ZoomTransform | null = null;
+  private previousNodeKeys: Set<string> = new Set();
+  private previousFoldStates: Map<string, number> = new Map();
 
- 
   constructor(
     g: d3.Selection<any, any, any, any>,
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -46,7 +49,29 @@ export class SimpleTreeRenderer {
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 2])
       .on('zoom', (event) => {
+        this.currentTransform = event.transform;
         this.g.attr('transform', event.transform);
+        
+        // Clear any existing render timeout
+        if (this.layoutTimeout) {
+          clearTimeout(this.layoutTimeout);
+        }
+        
+        // Clear previous states during zoom to prevent animations
+        this.previousNodeKeys.clear();
+        this.previousFoldStates.clear();
+        
+        // Update viewport and immediately process visible nodes
+        this.updateViewport();
+        
+        // Use requestAnimationFrame for smooth updates during continuous pan/zoom
+        if (!this.isRenderScheduled) {
+          this.isRenderScheduled = true;
+          requestAnimationFrame(() => {
+            this.render(); // Call render instead of just processVisibleNodes
+            this.isRenderScheduled = false;
+          });
+        }
       });
 
     this.svg.call(this.zoom);
@@ -57,6 +82,18 @@ export class SimpleTreeRenderer {
       .attr('type', 'text/css');
 
     this.updateStyle();
+
+    // Initial viewport setup
+    this.updateViewport();
+
+    // Add resize observer to handle window resizing
+    if (typeof ResizeObserver !== 'undefined') {
+      const resizeObserver = new ResizeObserver(() => {
+        this.updateViewport();
+        this.scheduleRender();
+      });
+      resizeObserver.observe(svg.node()!);
+    }
   }
 
   private getStyleContent(): string {
@@ -129,11 +166,17 @@ export class SimpleTreeRenderer {
     const nodeKey = node.state.key;
     const prevSize = this.nodeSizes.get(nodeKey);
     
-    if (!prevSize || prevSize.width !== width || prevSize.height !== height) {
+    if (!prevSize || Math.abs(prevSize.width - width) > 1 || Math.abs(prevSize.height - height) > 1) {
       node.state.size = [width, height];
       this.nodeSizes.set(nodeKey, { width, height });
-      this.renderQueue.add(nodeKey);
-      this.scheduleRender();
+      
+      // Clear any pending layout timeout
+      if (this.layoutTimeout) {
+        clearTimeout(this.layoutTimeout);
+      }
+      
+      // Trigger immediate render for significant size changes
+      this.render();
     }
   }
 
@@ -175,10 +218,14 @@ export class SimpleTreeRenderer {
     const tree = flextree({
       direction: options.direction,
       levelSpacing: options.levelSpacing,
-      siblingSpacing: options.siblingSpacing,
+      siblingSpacing: Math.max(options.siblingSpacing ?? 8, 8),
       nodeSize: (node: FlexTreeNode) => {
+        // Use the node's stored size if available, otherwise fall back to default
         const storedSize = this.nodeSizes.get(node.data.state.key);
-        return storedSize ? [storedSize.width, storedSize.height] : options.nodeSize ?? defaultOptions.nodeSize;
+        const size: [number, number] = storedSize 
+          ? [storedSize.width + 8, storedSize.height + 8]  // Add padding to node sizes
+          : options.nodeSize ?? defaultOptions.nodeSize;
+        return size;
       },
     });
 
@@ -251,7 +298,7 @@ export class SimpleTreeRenderer {
             sourceDirection: source.data.direction,
             targetDirection: target.data.direction,
             sourceDepth: source.depth,
-            animateFlag: true,
+            animateFlag: false, // Disable animations
           })
         )
       );
@@ -278,95 +325,104 @@ export class SimpleTreeRenderer {
     const size = this.nodeSizes.get(node.state.key) ?? { width: 0, height: 0 };
     
     return MindMapUtils.computeRectWithSize(node.state.rect, [size.width, size.height]);
-
   }
 
-  render(): void {
+  private updateViewport() {
+    if (!this.svg.node()) return;
+
+    const svgRect = this.svg.node()!.getBoundingClientRect();
+    const transform = this.currentTransform || d3.zoomIdentity;
+
+    // Calculate the visible viewport in the tree's coordinate system with padding
+    const padding = 100; // Add padding to pre-render nodes just outside viewport
+    this.currentViewport = {
+      x: -transform.x / transform.k - padding,
+      y: -transform.y / transform.k - padding,
+      width: (svgRect.width / transform.k) + (padding * 2),
+      height: (svgRect.height / transform.k) + (padding * 2)
+    };
+
+    // Optimize by only checking nodes that might need cleanup
+    const nodesToCheck = Array.from(this.nodePositions.entries());
+    for (const [key, rect] of nodesToCheck) {
+      if (!this.isRectVisible(rect, this.currentViewport)) {
+        this.nodePositions.delete(key);
+        const root = this.nodeRoots.get(key);
+        if (root) {
+          root.unmount();
+          this.nodeRoots.delete(key);
+        }
+      }
+    }
+  }
+
+
+  private isNodeVisible(node: d3.HierarchyNode<INode>): boolean {
+    if (!this.currentViewport) return true;
+
+    const nodeRect = this.computeNodeRectWithSize(node.data);
+    const expandedRect = {
+      x: nodeRect.x - 20,
+      y: nodeRect.y - 20,
+      width: nodeRect.width + 40,
+      height: nodeRect.height + 40
+    };
+
+    return this.isRectVisible(expandedRect, this.currentViewport);
+  }
+
+
+
+
+  private processVisibleNodes() {
+    if (!this.currentViewport) return;
+
     const data = this.stateManager.getData();
     if (!data) return;
-  
-    // Clear the roots map when doing a full re-render
-    this.nodeRoots.clear();
-  
-    const options = this.stateManager.getOptions();
-    const initializedData = initializeNode(data, 0, options.direction);
-  
-    // Clear existing content
-    this.g.selectAll('*').remove();
-  
-    // Build the flextree layout
-    const tree = flextree({
-      direction: options.direction,
-      levelSpacing: options.levelSpacing,
-      siblingSpacing: options.siblingSpacing,
-      nodeSize: (node: FlexTreeNode) => {
-        // Use the node's stored size if available, otherwise fall back to default
 
-        const storedSize = this.nodeSizes.get(node.data.state.key)
-        const size: [number, number] = storedSize ? [storedSize.width, storedSize.height] : options.nodeSize ?? defaultOptions.nodeSize;
-
-        return size;
-      },
-    });
-  
-    const root = tree.hierarchy(initializedData);
+    const tree = this.buildTree(data);
+    const root = tree.hierarchy(data);
     tree.layout(root);
-  
-    // --------------------------------------------------
-    // 1) HELPER to check if a node's rect changed
-    // --------------------------------------------------
-    const rectHasChanged = (
-      nodeKey: string,
-      nextRect: Rect,
-      threshold = 0.1
-    ): boolean => {
-      // If node not previously tracked => it's "new," so we say it changed
-      const prevRect = this.nodePositions.get(nodeKey);
-      if (!prevRect) return true;
-  
-      const deltaX = Math.abs(nextRect.x - prevRect.x);
-      const deltaY = Math.abs(nextRect.y - prevRect.y);
-      return (deltaX > threshold || deltaY > threshold);
-    };
-  
-    // --------------------------------------------------
-    // 2) RENDER LINKS, animate if source/target node rect changed
-    // --------------------------------------------------
-    const linkSelection = this.g
-      .selectAll('g.link-container')
-      .data(root.links())
-      .join('g')
-      .attr('class', 'link-container');
-  
-    linkSelection.each((d, i, elements) => {
-      // Unique key for this link
-      const container = elements[i];
-      const linkKey = d.source.data.state.key + '-' + d.target.data.state.key;
 
+    // Get all nodes and their visibility status
+    const allNodes = root.descendants();
+    const visibleNodes = allNodes.filter(node => this.isNodeVisible(node));
+    const visibleNodeKeys = new Set(visibleNodes.map(node => node.data.state.key));
+
+    // Get all links where at least one endpoint is visible
+    const visibleLinks = root.links().filter(link => 
+      visibleNodeKeys.has(link.source.data.state.key) || 
+      visibleNodeKeys.has(link.target.data.state.key)
+    );
+
+    // Update only the nodes and links that are visible
+    this.updateVisibleElements(visibleNodes, visibleLinks);
+  }
+
+  private updateVisibleElements(visibleNodes: d3.HierarchyNode<INode>[], visibleLinks: d3.HierarchyLink<INode>[]) {
+    // Update links first to ensure proper layering
+    const linkContainers = this.g.selectAll('g.link-container')
+      .data(visibleLinks, (d: any) => `${d.source.data.state.key}-${d.target.data.state.key}`);
+
+    // Handle link enter/exit
+    linkContainers.exit().remove();
+    const linkEnter = linkContainers.enter()
+      .append('g')
+      .attr('class', 'link-container')
+      .attr('data-link', d => `${d.source.data.state.key}-${d.target.data.state.key}`);
+
+    // Update all links (both new and existing)
+    linkContainers.merge(linkEnter as any).each((d: any, i, elements) => {
       const sourceRect = this.computeNodeRectWithSize(d.source.data);
       const targetRect = this.computeNodeRectWithSize(d.target.data);
-  
-      // Check if either node has moved
-      const sourceChanged = rectHasChanged(
-        d.source.data.state.key,
-        sourceRect
-      );
-      const targetChanged = rectHasChanged(
-        d.target.data.state.key,
-        targetRect
-      );
-      const animateFlag = sourceChanged || targetChanged;
-
-      console.log({sourceHeight: d.source.data.state.rect.height, targetHeight: d.target.data.state.rect.height})
-  
-      // Render the link with animateFlag
-      const reactRoot = createRoot(container as HTMLElement);
-      reactRoot.render(
+      
+      const options = this.stateManager.getOptions();
+      const root = createRoot(elements[i] as HTMLElement);
+      root.render(
         createElement(
           StrictMode,
           null,
           createElement(Path, {
-            // Pass the computed source/target positions
             source: {
               x: sourceRect.x,
               y: sourceRect.y,
@@ -381,61 +437,207 @@ export class SimpleTreeRenderer {
             nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
             sourceDirection: d.source.data.direction,
             targetDirection: d.target.data.direction,
-            sourceDepth: d.source.depth,  
-            animateFlag: animateFlag,
+            sourceDepth: d.source.depth,
+            animateFlag: false, // Disable animations
+          })
+        )
+      );
+    });
+
+    // Update nodes
+    const nodeContainers = this.g.selectAll('g.node-wrapper')
+      .data(visibleNodes, (d: any) => d.data.state.key);
+
+    // Handle node enter/exit
+    nodeContainers.exit().each((d: any) => {
+      const root = this.nodeRoots.get(d.data.state.key);
+      if (root) {
+        root.unmount();
+        this.nodeRoots.delete(d.data.state.key);
+      }
+    }).remove();
+
+    nodeContainers.enter()
+      .append('g')
+      .attr('class', 'node-wrapper')
+      .attr('data-key', d => d.data.state.key);
+
+    // Update existing nodes
+    nodeContainers.each((d: any, i, elements) => {
+      this.updateNodeElement(d, elements[i]);
+    });
+  }
+
+  private buildTree(data: INode) {
+    const options = this.stateManager.getOptions();
+    return flextree({
+      direction: options.direction,
+      levelSpacing: options.levelSpacing,
+      siblingSpacing: Math.max(options.siblingSpacing ?? 8, 8),
+      nodeSize: (node: FlexTreeNode) => {
+        const storedSize = this.nodeSizes.get(node.data.state.key);
+        return storedSize 
+          ? [storedSize.width + 8, storedSize.height + 8]
+          : options.nodeSize ?? defaultOptions.nodeSize;
+      },
+    });
+  }
+
+  private updateNodeElement(node: d3.HierarchyNode<INode>, element: Element) {
+    const transform = `translate(${node.data.state.rect.x},${node.data.state.rect.y})`;
+    let root = this.nodeRoots.get(node.data.state.key);
+    
+    if (!root) {
+      root = createRoot(element as HTMLElement);
+      this.nodeRoots.set(node.data.state.key, root);
+    }
+
+    root.render(
+      createElement(
+        StrictMode,
+        null,
+        this.renderElement(node.data, transform, node.data.state.shouldAnimate)
+      )
+    );
+  }
+
+  private cleanupInvisibleNodes() {
+    // Cleanup React roots for nodes that are no longer visible
+    for (const [key, root] of this.nodeRoots.entries()) {
+      const nodeElement = this.g.select(`g.node-wrapper[data-key="${key}"]`).node();
+      if (!nodeElement) {
+        root.unmount();
+        this.nodeRoots.delete(key);
+      }
+    }
+  }
+
+
+
+
+  render(): void {
+    const data = this.stateManager.getData();
+    if (!data) return;
+
+    // Store current node keys and fold states before updating
+    this.previousNodeKeys.clear();
+    this.previousFoldStates.clear();
+    
+    // Collect current state
+    const collectState = (node: INode) => {
+      this.previousNodeKeys.add(node.state.key);
+      this.previousFoldStates.set(node.state.key, node.payload?.fold ?? 0);
+      node.children?.forEach(collectState);
+    };
+    collectState(data);
+  
+    const options = this.stateManager.getOptions();
+    const initializedData = initializeNode(data, 0, options.direction);
+  
+    // Build the flextree layout
+    const tree = flextree({
+      direction: options.direction,
+      levelSpacing: options.levelSpacing,
+      siblingSpacing: Math.max(options.siblingSpacing ?? 8, 8),
+      nodeSize: (node: FlexTreeNode) => {
+        const storedSize = this.nodeSizes.get(node.data.state.key);
+        const size: [number, number] = storedSize 
+          ? [storedSize.width + 8, storedSize.height + 8]
+          : options.nodeSize ?? defaultOptions.nodeSize;
+        return size;
+      },
+    });
+  
+    const root = tree.hierarchy(initializedData);
+    tree.layout(root);
+    
+    // Filter visible nodes and get all links connected to visible nodes
+    const allNodes = root.descendants();
+    const visibleNodes = allNodes.filter(node => this.isNodeVisible(node));
+    const visibleNodeKeys = new Set(visibleNodes.map(node => node.data.state.key));
+    
+    // Get all links where at least one endpoint is visible
+    const visibleLinks = root.links().filter(link => 
+      visibleNodeKeys.has(link.source.data.state.key) || 
+      visibleNodeKeys.has(link.target.data.state.key)
+    );
+    
+    // Remove old elements that are no longer needed
+    this.g.selectAll('g.link-container')
+      .data(visibleLinks, (d: any) => `${d.source.data.state.key}-${d.target.data.state.key}`)
+      .join(
+      enter => enter.append('g')
+        .attr('class', 'link-container')
+        .attr('data-link', d => `${d.source.data.state.key}-${d.target.data.state.key}`),
+      update => update,
+      exit => exit.remove()
+      );
+    
+    // Update links
+    this.g.selectAll('g.link-container').each((d: any, i, elements) => {
+      const container = elements[i];
+      const sourceRect = this.computeNodeRectWithSize(d.source.data);
+      const targetRect = this.computeNodeRectWithSize(d.target.data);
+      
+      const reactRoot = createRoot(container as HTMLElement);
+      reactRoot.render(
+        createElement(
+          StrictMode,
+          null,
+          createElement(Path, {
+            source: {
+              x: sourceRect.x,
+              y: sourceRect.y,
+              rect: sourceRect,
+            },
+            target: {
+              x: targetRect.x,
+              y: targetRect.y,
+              rect: targetRect,
+            },
+            direction: options.direction ?? defaultOptions.direction,
+            nodeSize: options.nodeSize ?? defaultOptions.nodeSize,
+            sourceDirection: d.source.data.direction,
+            targetDirection: d.target.data.direction,
+            sourceDepth: d.source.depth,
+            animateFlag: false, // Disable animations
           })
         )
       );
     });
   
-    // --------------------------------------------------
-    // 3) RENDER NODES
-    // --------------------------------------------------
-    const nodes = this.g
-      .selectAll('g.node-wrapper')
-      .data(root.descendants())
-      .join('g')
-      .attr('class', 'node-wrapper');
+    // Update nodes with proper enter/update/exit handling
+    this.g.selectAll('g.node-wrapper')
+      .data(visibleNodes, (d: any) => d.data.state.key)
+      .join(
+        enter => enter.append('g')
+          .attr('class', 'node-wrapper')
+          .attr('data-key', d => d.data.state.key),
+        update => update,
+        exit => exit.remove()
+      )
+      .each((d: any, i, elements) => {
+        const container = elements[i];
+        const transform = `translate(${d.data.state.rect.x},${d.data.state.rect.y})`;
+        
+        let reactRoot = this.nodeRoots.get(d.data.state.key);
+        if (!reactRoot) {
+          reactRoot = createRoot(container as HTMLElement);
+          this.nodeRoots.set(d.data.state.key, reactRoot);
+        }
+        
+        reactRoot.render(
+          createElement(
+            StrictMode,
+            null,
+            this.renderElement(d.data, transform, d.data.state.shouldAnimate)
+          )
+        );
+      });
   
-    nodes.selectAll('*').remove();
+    // Cleanup any React roots for nodes that are no longer visible
+    this.cleanupInvisibleNodes();
   
-    // Helper to decide whether a node is new or moved
-    const shouldAnimateNode = (prev: Rect | undefined, next: Rect, threshold = 0.1): boolean => {
-      if (!prev) return true; // new node or not tracked
-      const deltaX = Math.abs(next.x - prev.x);
-      const deltaY = Math.abs(next.y - prev.y);
-      return (deltaX > threshold || deltaY > threshold);
-    };
-  
-    nodes.each((d, i, elements) => {
-      const container = elements[i];
-      const newRect: Rect = d.data.state.rect;
-      const prevRect = this.nodePositions.get(d.data.state.key);
-  
-      // Is this node new or significantly moved?
-      const animateFlag = shouldAnimateNode(prevRect, newRect);
-      d.data.state.shouldAnimate = animateFlag;
-  
-      // Update stored position for next time
-      this.nodePositions.set(d.data.state.key, { ...newRect });
-  
-      // The transform for this node
-      const transform = `translate(${newRect.x},${newRect.y})`;
-  
-      // Create new root and store it
-      const reactRoot = createRoot(container as HTMLElement);
-      this.nodeRoots.set(d.data.state.key, reactRoot);
-  
-      reactRoot.render(
-        createElement(
-          StrictMode,
-          null,
-          this.renderElement(d.data, transform, d.data.state.shouldAnimate)
-        )
-      );
-    });
-  
-    // Optionally call highlight function, etc.
     this.updateHighlight();
   }
   
