@@ -31,26 +31,32 @@
     "url": "https://github.com/markmap/markmap/issues"
   },
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "unpkg": "dist/browser/index.js",
   "jsdelivr": "dist/browser/index.js",
   "files": [
     "dist"
   ],
   "typings": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
   "dependencies": {
     "@babel/runtime": "^7.22.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@tailwindcss/postcss": "^4.0.3",
     "@tailwindcss/vite": "^4.0.3",
     "@vitejs/plugin-react": "^4.3.4",
     "@vscode/markdown-it-katex": "^1.1.0",
     "cheerio": "1.0.0",
     "clsx": "^2.1.1",
-    "d3": "^7.8.5",
-    "d3-selection": "^3.0.0",
-    "framer-motion": "^12.1.0",
     "highlight.js": "^11.8.0",
     "katex": "^0.16.8",
     "markdown-it": "^14.1.0",
@@ -60,14 +66,21 @@
     "markdown-it-sup": "^2.0.0",
     "markmap-react": "link:",
     "prismjs": "^1.29.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.1",
     "yaml": "^2.5.1"
+  },
+  "peerDependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.0.0",
+    "d3": "^7.0.0",
+    "d3-selection": "^3.0.0",
+    "framer-motion": "^12.0.0",
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
   },
   "devDependencies": {
     "@gera2ld/jsx-dom": "^2.2.2",
     "@highlightjs/cdn-assets": "^11.8.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@types/d3": "^7.4.0",
     "@types/d3-hierarchy": "^3.1.6",
     "@types/katex": "^0.16.7",
@@ -77,13 +90,19 @@
     "@types/react-dom": "^19.0.3",
     "@unocss/postcss": "^65.4.3",
     "autoprefixer": "^10.4.20",
+    "d3": "^7.8.5",
     "d3-hierarchy": "^3.1.2",
+    "d3-selection": "^3.0.0",
     "d3-selection-multi": "^1.0.1",
+    "framer-motion": "^12.1.0",
     "npm2url": "^0.2.4",
     "postcss": "^8.5.1",
     "postcss-calc": "^10.1.1",
     "postcss-nested": "^7.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tailwindcss": "^3.4.17",
+    "terser": "^5.38.2",
     "vite": "^6.1.0",
     "vite-plugin-dts": "^4.5.0",
     "webfontloader": "^1.6.28"

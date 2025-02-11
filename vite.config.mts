@@ -13,6 +13,8 @@ export default defineConfig({
     react(),
     dts({
       insertTypesEntry: true,
+      rollupTypes: true,
+      copyDtsFiles: true
     }),
   ],
   css: {
@@ -26,11 +28,47 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    sourcemap: true,
     lib: {
-        entry: resolve(__dirname, './src/index.ts'),
+      entry: resolve(__dirname, './src/index.ts'),
       name: 'ReactMindmap',
-      formats: ['es', 'umd'],
+      formats: ['es'],
       fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
     },
+    rollupOptions: {
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@radix-ui/react-dropdown-menu',
+        'framer-motion',
+        'd3',
+        'd3-selection',
+        /node_modules/
+      ],
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        entryFileNames: '[name].mjs',
+        dir: 'dist',
+        exports: 'named',
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+          'react/jsx-runtime': 'jsxRuntime',
+          '@radix-ui/react-dropdown-menu': 'RadixDropdownMenu',
+          'framer-motion': 'FramerMotion',
+          'd3': 'd3',
+          'd3-selection': 'd3Selection'
+        },
+        generatedCode: {
+          objectShorthand: true,
+        },
+        format: 'es',
+        minifyInternalExports: false
+      }
+    },
+    minify: false,
+    emptyOutDir: true,
   }
 });

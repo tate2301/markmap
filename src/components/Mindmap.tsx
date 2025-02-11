@@ -13,9 +13,6 @@ import dottedBg from '../assets/dotted-bg.svg?raw';
 import {MindmapConfig, MindmapProps} from ".."
 
 
-
-
-
 const defaultConfig: MindmapConfig = {
   initialDirection: Direction.LR,
   backgroundColor: '#f5f5f5',
